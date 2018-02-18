@@ -34,4 +34,7 @@ def download(targets: List[Tuple[str, str]], *, directory: str = None):
             print('\tout=%s' % filename, file=fp)
     args.extend(['--input-file', path])
     print(' '.join(args), file=sys.stderr)
-    os.execvp('aria2c', args)
+    try:
+        os.execvp('aria2c', args)
+    except FileNotFoundError:
+        raise RuntimeError('aria2c(1) not found')
