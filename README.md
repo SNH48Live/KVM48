@@ -10,7 +10,7 @@ KVM48, the Koudai48 VOD Manager. It is capable of downloading all streaming VODs
 
 Not to be confused with [KVM for kernel version 4.8](https://git.kernel.org/pub/scm/virt/kvm/kvm.git/tag/?h=kvm-4.8-3).
 
-KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windows Subsystem for Linux, aka WSL); it is neither tested nor supported on Windows.
+KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windows Subsystem for Linux, aka WSL); it is neither tested nor supported on Windows NT.
 
 ## Contents
 
