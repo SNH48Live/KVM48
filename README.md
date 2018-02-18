@@ -24,6 +24,8 @@ KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windo
 - [Configuration](#configuration)
 - [Invocation examples](#invocation-examples)
 - [Roadmap](#roadmap)
+  - [Native M3U8 VOD support](#native-m3u8-vod-support)
+  - [Livestream monitoring and recording](#livestream-monitoring-and-recording)
 - [Reporting bugs](#reporting-bugs)
 - [License](#license)
 
