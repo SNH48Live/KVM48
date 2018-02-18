@@ -89,8 +89,10 @@ def main():
         parser = argparse.ArgumentParser(prog='kvm48', description=HELP,
                                          formatter_class=argparse.RawDescriptionHelpFormatter)
         newarg = parser.add_argument
-        newarg('-f', '--from', dest='from_', type=parse_date, help='starting day of date range')
-        newarg('-t', '--to', dest='to_', type=parse_date, help='ending day of date range')
+        newarg('-f', '--from', dest='from_', type=parse_date, metavar='FROM',
+               help='starting day of date range')
+        newarg('-t', '--to', dest='to_', type=parse_date, metavar='TO',
+               help='ending day of date range')
         newarg('-s', '--span', type=int, help='number of days in date range')
         newarg('--dry', action='store_true', help='print URL & filename combos but do not download')
         newarg('--config', help='use this config file instead of the default')

@@ -46,8 +46,8 @@ pip install KVM48
 
 ```console
 $ kvm48 --help
-usage: kvm48 [-h] [-f FROM_] [-t TO_] [-s SPAN] [--dry] [--config CONFIG]
-             [--debug]
+usage: kvm48 [-h] [-f FROM] [-t TO] [-s SPAN] [--dry] [--config CONFIG]
+             [--version] [--debug]
 
 KVM48, the Koudai48 VOD Manager.
 
@@ -91,9 +91,8 @@ should be configured directly in the aria2 config file.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -f FROM_, --from FROM_
-                        starting day of date range
-  -t TO_, --to TO_      ending day of date range
+  -f FROM, --from FROM  starting day of date range
+  -t TO, --to TO        ending day of date range
   -s SPAN, --span SPAN  number of days in date range
   --dry                 print URL & filename combos but do not download
   --config CONFIG       use this config file instead of the default
