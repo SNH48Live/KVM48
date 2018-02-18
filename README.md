@@ -270,11 +270,17 @@ We assume the sample configuration above (in particular, `span` is 2) in the fol
 
 ## Roadmap
 
-- Currently, when encountering M3U8 VOD URLs (from Yizhibo), KVM48 simply downloads them to disk like the MP4 VODs, rendering them useless. This is apparently not ideal.
+### Native M3U8 VOD support
 
-  I have already written an HLS downloader, [caterpillar](https://github.com/zmwangx/caterpillar) (which is based on FFmpeg, but parallelized and more resilient to crappy streams), in the past. The problem is integration: aria2c and caterpillar both produce helpful progress bars, but mixing the output streams of these two would be a nightmare.
+Currently, when encountering M3U8 VOD URLs (from Yizhibo), KVM48 simply downloads them to disk like the MP4 VODs, rendering them useless. This is apparently not ideal.
 
-  A basic plan here is to implement multiplexing through tmux.
+I have already written an HLS downloader, [caterpillar](https://github.com/zmwangx/caterpillar) (which is based on FFmpeg, but parallelized and more resilient to crappy streams), in the past. The problem is integration: aria2c and caterpillar both produce helpful progress bars, but mixing the output streams of these two would be a nightmare.
+
+A basic plan here is to implement multiplexing through tmux.
+
+### Livestream monitoring and recording
+
+This is somewhat out of scope, but not hard to implement once we've figured out multiplexing.
 
 ## Reporting bugs
 
