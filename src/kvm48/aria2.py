@@ -15,7 +15,7 @@ ARIA2C_OPTS = [
 def download(targets: List[Tuple[str, str]], *, directory: str = None):
     def existing_file_filter(target: Tuple[str, str]) -> bool:
         url, filename = target
-        path = os.path.join(directory, filename) if directory else directory
+        path = os.path.join(directory, filename) if directory else filename
         if os.path.exists(path) and not os.path.exists(path + '.aria2'):
             print("'%s' already exists" % path, file=sys.stderr)
             return False  # File exists, filter this out
