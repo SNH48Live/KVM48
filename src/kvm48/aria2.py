@@ -8,6 +8,7 @@ ARIA2C_OPTS = [
     '--max-connection-per-server=16',
     '--allow-overwrite=false',
     '--auto-file-renaming=false',
+    '--check-certificate=false',
 ]
 
 
