@@ -12,6 +12,23 @@ Not to be confused with [KVM for kernel version 4.8](https://git.kernel.org/pub/
 
 KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windows Subsystem for Linux, aka WSL); it is neither tested nor supported on Windows.
 
+## Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Invocation examples](#invocation-examples)
+- [Roadmap](#roadmap)
+- [Reporting bugs](#reporting-bugs)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Prerequisites
 
 - Python 3.4 or later;
