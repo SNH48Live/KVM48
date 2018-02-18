@@ -1,7 +1,7 @@
 <h1 align="center"><img src="https://raw.githubusercontent.com/SNH48Live/KVM48/master/assets/logo.png" width="150" height="150" alt="KVM48"></h1>
 
 <p align="center">
-  <a href="https://pypi.python.org/pypi/kvm48"><img src="https://img.shields.io/pypi/v/kvm48.svg?maxAge=3600" alt="pypi"></a>
+  <a href="https://pypi.python.org/pypi/KVM48"><img src="https://img.shields.io/pypi/v/KVM48.svg?maxAge=3600" alt="pypi"></a>
   <img src="https://img.shields.io/badge/python-3.4,%203.5,%203.6,%203.7-blue.svg?maxAge=86400" alt="python: 3.4, 3.5, 3.6, 3.7">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?maxAge=2592000" alt="license: MIT">
 </p>
