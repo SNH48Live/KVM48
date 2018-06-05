@@ -99,7 +99,7 @@ class Config(object):
             'title': vod.title.strip(),
             'ext': os.path.splitext(vod.vod_url)[1][1:],
         }
-        return unsanitized.translate(str.maketrans('/\n\r', '_  '))
+        return unsanitized.translate(str.maketrans('/\t\n\r\f\v', '_     '))
 
     def load(self, config_file: str = None) -> None:
         if not config_file:
