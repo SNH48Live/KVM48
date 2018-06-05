@@ -132,11 +132,18 @@ def main():
         vod_list = koudai.list_vods(from_, to_.shift(days=1), group_id=conf.group_id)
 
         targets = []
+        a2_targets = []
+        m3u8_targets = []
         existing_filenames = set()
         for vod in reversed(list(vod_list)):
             if vod.name in conf.names:
                 url = vod.vod_url
-                base, ext = os.path.splitext(conf.filename(vod))
+                base, src_ext = os.path.splitext(conf.filename(vod))
+
+                # If source extension is .m3u8, use .mp4 as output
+                # extension; otherwise, use the source extension as the
+                # output extension.
+                ext = '.mp4' if src_ext == '.m3u8' else src_ext
 
                 # Filename deduplication
                 filename = base + ext
@@ -146,13 +153,26 @@ def main():
                     filename = '%s (%d)%s' % (base, number, ext)
                 existing_filenames.add(filename)
 
-                targets.append((url, filename))
+                entry = (url, filename)
+                targets.append(entry)
+                if src_ext == '.m3u8':
+                    m3u8_targets.append(entry)
+                else:
+                    a2_targets.append(entry)
 
         for url, filename in targets:
             print('%s\t%s' % (url, filename))
 
-        if not args.dry and targets:
-            aria2.download(targets, directory=conf.directory)
+        if not args.dry and m3u8_targets:
+            m3u8_list = os.path.join(conf.directory, 'm3u8.txt')
+            with open(m3u8_list, 'w') as fp:
+                for url, filename in m3u8_targets:
+                    print('%s\t%s' % (url, filename), file=fp)
+            print('Info of M3U8 VODs written to "%s" (could be consumed by caterpillar)' % m3u8_list,
+                  file=sys.stderr)
+
+        if not args.dry and a2_targets:
+            aria2.download(a2_targets, directory=conf.directory)
     except Exception as exc:
         if debug:
             raise
