@@ -165,7 +165,7 @@ def main():
 
         if not args.dry and m3u8_targets:
             m3u8_list = os.path.join(conf.directory, 'm3u8.txt')
-            with open(m3u8_list, 'w') as fp:
+            with open(m3u8_list, 'w', encoding='utf-8') as fp:
                 for url, filename in m3u8_targets:
                     print('%s\t%s' % (url, filename), file=fp)
             print('Info of M3U8 VODs written to "%s" (could be consumed by caterpillar)' % m3u8_list,
