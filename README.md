@@ -279,6 +279,8 @@ I have already written an HLS downloader, [caterpillar](https://github.com/zmwan
 
 A basic plan here is to implement multiplexing through tmux.
 
+**Update.** Since v0.1.4, M3U8 entries are written to a manifest file, suitable for direct consumption with [caterpillar](https://github.com/zmwangx/caterpillar). Native support with duplexing won't come in the forseeable future.
+
 ### Livestream monitoring and recording
 
 This is somewhat out of scope, but not hard to implement once we've figured out multiplexing.
