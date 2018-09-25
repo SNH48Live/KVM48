@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+[[ $PYTHON_VERSION == 3.* ]] || { echo "[ERROR] Invalid PYTHON_VERSION $PYTHON_VERSION" >&2; exit 1; }
+sudo docker build -t zmwangx/caterpillar:pypi 'https://github.com/zmwangx/caterpillar.git#master:docker'
+sudo docker build -f docker/Dockerfile --build-arg "PYTHON_VERSION=$PYTHON_VERSION" -t "snh48live/kvm48:master-python-$PYTHON_VERSION" .

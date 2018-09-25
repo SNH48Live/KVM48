@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+[[ $PYTHON_VERSION == 3.* ]] || { echo "[ERROR] Invalid PYTHON_VERSION $PYTHON_VERSION" >&2; exit 1; }
+mkdir -p data
+cat > data/kvm48-config.yml <<'EOF'
+group_id: 10
+names:
+- 陈观慧
+- 陈思
+- 戴萌
+- 孔肖吟
+- 李宇琪
+- 莫寒
+- 钱蓓婷
+- 邱欣怡
+- 吴哲晗
+- 徐晨辰
+- 许佳琪
+- 张语格
+span: 3
+directory: /data
+EOF
+
+sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml
+[[ -f data/m3u8.txt ]] && sudo docker run -it --rm -v "$PWD/data:/data" zmwangx/caterpillar:pypi --debug --batch /data/m3u8.txt
+rm -f data/m3u8.txt data/*.mp4
+
+# Test a known date range with m3u8 URLs to download.
+sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml --from 2018-09-17 --to 2018-09-17
+[[ -f data/m3u8.txt ]] || { echo "[ERROR] m3u8.txt not found" >&2; exit 1; }
+sudo docker run -it --rm -v "$PWD/data:/data" zmwangx/caterpillar:pypi --debug --batch /data/m3u8.txt
+rm -f data/m3u8.txt data/*.mp4
+
+rm data/kvm48-config.yml
+ls -lh data

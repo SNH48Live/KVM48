@@ -4,6 +4,7 @@
   <a href="https://pypi.python.org/pypi/KVM48"><img src="https://img.shields.io/pypi/v/KVM48.svg?maxAge=3600" alt="pypi"></a>
   <img src="https://img.shields.io/badge/python-3.5,%203.6,%203.7-blue.svg?maxAge=86400" alt="python: 3.5, 3.6, 3.7">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?maxAge=2592000" alt="license: MIT">
+  <img src="https://travis-ci.org/SNH48Live/KVM48.svg?branch=master" alt="build status">
 </p>
 
 KVM48, the Koudai48 VOD Manager. It is capable of downloading all streaming VODs of a set of monitored members in a specified date range.
