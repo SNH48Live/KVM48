@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://pypi.python.org/pypi/KVM48"><img src="https://img.shields.io/pypi/v/KVM48.svg?maxAge=3600" alt="pypi"></a>
-  <img src="https://img.shields.io/badge/python-3.4,%203.5,%203.6,%203.7-blue.svg?maxAge=86400" alt="python: 3.4, 3.5, 3.6, 3.7">
+  <img src="https://img.shields.io/badge/python-3.5,%203.6,%203.7-blue.svg?maxAge=86400" alt="python: 3.5, 3.6, 3.7">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg?maxAge=2592000" alt="license: MIT">
 </p>
 
@@ -33,7 +33,7 @@ KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windo
 
 ## Prerequisites
 
-- Python 3.4 or later;
+- Python 3.5 or later;
 - [`aria2`](https://aria2.github.io/), KVM48's downloader of choice.
 
 ## Installation
