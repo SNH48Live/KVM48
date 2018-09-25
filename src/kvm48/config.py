@@ -133,7 +133,7 @@ class Config(object):
                 raise ConfigError('nonexistent directory: %s' % directory)
             self.directory = directory
         else:
-            self.directory = None
+            self.directory = os.getcwd()
 
         self.naming = obj.get('naming') or DEFAULT_NAMING_PATTERN
         self.test_naming_pattern()
