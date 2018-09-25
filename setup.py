@@ -6,7 +6,7 @@ import setuptools
 
 
 HERE = pathlib.Path(__file__).resolve().parent
-with open(HERE / 'src/kvm48/version.py') as fp:
+with open(HERE.joinpath('src/kvm48/version.py').as_posix()) as fp:
     exec(fp.read())
 
 setuptools.setup(
