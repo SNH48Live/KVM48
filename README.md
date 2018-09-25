@@ -274,7 +274,7 @@ We assume the sample configuration above (in particular, `span` is 2) in the fol
 
 ### Native M3U8 VOD support
 
-Currently, when encountering M3U8 VOD URLs (from Yizhibo), KVM48 simply downloads them to disk like the MP4 VODs, rendering them useless. This is apparently not ideal.
+~Currently, when encountering M3U8 VOD URLs (from Yizhibo), KVM48 simply downloads them to disk like the MP4 VODs, rendering them useless. This is apparently not ideal.~ (Behavior has changed; see **Update** below.)
 
 I have already written an HLS downloader, [caterpillar](https://github.com/zmwangx/caterpillar) (which is based on FFmpeg, but parallelized and more resilient to crappy streams), in the past. The problem is integration: aria2c and caterpillar both produce helpful progress bars, but mixing the output streams of these two would be a nightmare.
 
