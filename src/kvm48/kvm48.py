@@ -7,7 +7,7 @@ import sys
 
 import arrow
 
-from . import aria2, config, koudai
+from . import aria2, config, koudai, peek
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -170,6 +170,12 @@ def main():
                     print('%s\t%s' % (url, filename), file=fp)
             print('Info of M3U8 VODs written to "%s" (could be consumed by caterpillar)' % m3u8_list,
                   file=sys.stderr)
+
+        total_size = peek.peek_total_size(url for url, _ in a2_targets)
+        if total_size is not None:
+            print('Total direct download size: {:,} bytes'.format(total_size), file=sys.stderr)
+        else:
+            print('[WARNING] cannot determine total direct download size', file=sys.stderr)
 
         if not args.dry and a2_targets:
             aria2.download(a2_targets, directory=conf.directory)
