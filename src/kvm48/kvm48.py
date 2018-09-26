@@ -129,7 +129,8 @@ def main():
         print('Searching for VODs in the date range %s to %s for: %s' %
               (from_.date(), to_.date(), ', '.join(conf.names)), file=sys.stderr)
 
-        vod_list = koudai.list_vods(from_, to_.shift(days=1), group_id=conf.group_id)
+        vod_list = koudai.list_vods(from_, to_.shift(days=1), group_id=conf.group_id,
+                                    show_progress=True, show_progress_threshold=5)
 
         targets = []
         a2_targets = []

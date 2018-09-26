@@ -1,6 +1,8 @@
 import datetime
 import json
 import re
+import sys
+import time
 import urllib.parse
 from typing import Any, Dict, List, Union
 
@@ -59,12 +61,26 @@ def _resolve_resource_url(url: str) -> str:
 # - vod_url: str;
 # - danmaku_url: str.
 # VODs are generated in reverse chronological order.
+#
+# - show_progress: whether to print progress info (currently just a dot
+#   for each API request);
+# - show_progress_threshold: how many seconds to wait before showing
+#   progress info (because people don't care about progress if the call
+#   returns before they're bored).
 def list_vods(from_: Datetime, to_: Datetime, *,
-              member_id: int = 0, group_id: int = 0) -> List[VOD]:
+              member_id: int = 0, group_id: int = 0,
+              show_progress: bool = False,
+              show_progress_threshold: float = 0) -> List[VOD]:
     from_ms = _epoch_ms(from_)
     to_ms = _epoch_ms(to_)
+    start_time = time.time()
+    progress_written = False
     while from_ms < to_ms:
         try:
+            if show_progress and time.time() - start_time >= show_progress_threshold:
+                sys.stderr.write('.')
+                sys.stderr.flush()
+                progress_written = True
             payload = {
                 'type': 0,
                 'memberId': member_id,
@@ -100,3 +116,6 @@ def list_vods(from_: Datetime, to_: Datetime, *,
                 'vod_url': _resolve_resource_url(v.streamPath),
                 'danmaku_url': _resolve_resource_url(v.lrcPath),
             })
+    if progress_written:
+        sys.stderr.write('\n')
+        sys.stderr.flush()
