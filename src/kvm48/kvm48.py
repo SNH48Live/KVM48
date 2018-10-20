@@ -208,16 +208,11 @@ def main():
                 file=sys.stderr,
             )
 
-        total_size = peek.peek_total_size(url for url, _ in a2_targets)
-        if total_size is not None:
-            print(
-                "Total direct download size: {:,} bytes".format(total_size),
-                file=sys.stderr,
-            )
-        else:
-            print(
-                "[WARNING] cannot determine total direct download size", file=sys.stderr
-            )
+        total_size, unknown_files = peek.peek_total_size(url for url, _ in a2_targets)
+        msg = "Total direct download size: {:,} bytes".format(total_size)
+        if unknown_files > 0:
+            msg += " (size of %d files cannot be determined)" % unknown_files
+        print(msg, file=sys.stderr)
 
         if not args.dry and a2_targets:
             aria2.download(a2_targets, directory=conf.directory)
