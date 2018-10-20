@@ -29,7 +29,7 @@ def download(targets: List[Tuple[str, str]], *, directory: str = None):
     if directory:
         args.append("--dir=%s" % directory)
     fd, path = tempfile.mkstemp(prefix="kvm48.", suffix=".aria2in")
-    with os.fdopen(fd, "w") as fp:
+    with os.fdopen(fd, "w", encoding="utf-8") as fp:
         for url, filename in targets:
             print(url, file=fp)
             print("\tout=%s" % filename, file=fp)
