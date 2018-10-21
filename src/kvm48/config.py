@@ -72,6 +72,13 @@ directory:
 # An example file name produced by this pattern is
 #   20180211 莫寒口袋直播 一人吃火锅的人生成就(๑˙ー˙๑).mp4
 naming:
+
+# Whether to put VODs in named subdirectories. If turned on, each member
+# will have her own subdirectory named after her where all her VODs will
+# go. Default is off.
+#
+# New in v0.3.
+# named_subdirs: off
 """
 
 
@@ -86,6 +93,7 @@ class Config(object):
         self.span = 1  # type: int
         self.directory = None  # type: str
         self.naming = DEFAULT_NAMING_PATTERN  # type: str
+        self.named_subdirs = False  # type: bool
 
     def filename(self, vod: VOD) -> str:
         unsanitized = self.naming % {
@@ -120,6 +128,12 @@ class Config(object):
                 "\uFF02\uFF0A\uFF0F\uFF1A\uFF1C\uFF1E\uFF1F\uFF3C\uFF5C     ",
             )
         )
+
+    def filepath(self, vod: VOD) -> str:
+        if self.named_subdirs:
+            return vod.name + os.sep + self.filename(vod)
+        else:
+            return self.filename(vod)
 
     def load(self, config_file: str = None) -> None:
         if not config_file:
@@ -161,6 +175,10 @@ class Config(object):
 
         self.naming = obj.get("naming") or DEFAULT_NAMING_PATTERN
         self.test_naming_pattern()
+
+        self.named_subdirs = obj.get("named_subdirs", False)
+        if not isinstance(self.named_subdirs, bool):
+            raise ConfigError("invalid named_subdirs; named_subdirs must be a boolean")
 
     def test_naming_pattern(self) -> None:
         try:

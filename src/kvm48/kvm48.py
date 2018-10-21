@@ -168,11 +168,11 @@ def main():
         targets = []
         a2_targets = []
         m3u8_targets = []
-        existing_filenames = set()
+        existing_filepaths = set()
         for vod in reversed(list(vod_list)):
             if vod.name in conf.names:
                 url = vod.vod_url
-                base, src_ext = os.path.splitext(conf.filename(vod))
+                base, src_ext = os.path.splitext(conf.filepath(vod))
 
                 # If source extension is .m3u8, use .mp4 as output
                 # extension; otherwise, use the source extension as the
@@ -180,28 +180,37 @@ def main():
                 ext = ".mp4" if src_ext == ".m3u8" else src_ext
 
                 # Filename deduplication
-                filename = base + ext
+                filepath = base + ext
                 number = 0
-                while filename in existing_filenames:
+                while filepath in existing_filepaths:
                     number += 1
-                    filename = "%s (%d)%s" % (base, number, ext)
-                existing_filenames.add(filename)
+                    filepath = "%s (%d)%s" % (base, number, ext)
+                existing_filepaths.add(filepath)
 
-                entry = (url, filename)
+                entry = (url, filepath)
                 targets.append(entry)
                 if src_ext == ".m3u8":
                     m3u8_targets.append(entry)
                 else:
                     a2_targets.append(entry)
 
-        for url, filename in targets:
-            print("%s\t%s" % (url, filename))
+        for url, filepath in targets:
+            print("%s\t%s" % (url, filepath))
 
         if not args.dry and m3u8_targets:
             m3u8_list = os.path.join(conf.directory, "m3u8.txt")
             with open(m3u8_list, "w", encoding="utf-8") as fp:
-                for url, filename in m3u8_targets:
-                    print("%s\t%s" % (url, filename), file=fp)
+                for url, filepath in m3u8_targets:
+                    print("%s\t%s" % (url, filepath), file=fp)
+            if conf.named_subdirs:
+                subdirs = set(
+                    os.path.dirname(filepath) for url, filepath in m3u8_targets
+                )
+                for subdir in subdirs:
+                    try:
+                        os.mkdir(os.path.join(conf.directory, subdir))
+                    except FileExistsError:
+                        pass
             print(
                 'Info of M3U8 VODs written to "%s" (could be consumed by caterpillar)'
                 % m3u8_list,
