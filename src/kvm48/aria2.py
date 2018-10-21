@@ -10,6 +10,7 @@ ARIA2C_OPTS = [
     "--allow-overwrite=false",
     "--auto-file-renaming=false",
     "--check-certificate=false",
+    "--remote-time=true",
 ]
 
 
