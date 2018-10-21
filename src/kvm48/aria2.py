@@ -1,7 +1,8 @@
 import os
+import subprocess
 import sys
 import tempfile
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 # Override some bad defaults.
 ARIA2C_OPTS = [
@@ -13,7 +14,14 @@ ARIA2C_OPTS = [
 
 
 # targets is a list of (url, filename) pairs.
-def download(targets: List[Tuple[str, str]], *, directory: str = None):
+#
+# If execvp is False or the underlying OS is Windows NT, execute aria2c
+# in a subprocess; otherwise, replace the process with execvp.
+#
+# If aria2c is run in a subprocess, the return code is returned.
+def download(
+    targets: List[Tuple[str, str]], *, directory: str = None, execvp: bool = True
+) -> Optional[int]:
     def existing_file_filter(target: Tuple[str, str]) -> bool:
         url, filename = target
         path = os.path.join(directory, filename) if directory else filename
@@ -24,6 +32,10 @@ def download(targets: List[Tuple[str, str]], *, directory: str = None):
             return True
 
     targets = list(filter(existing_file_filter, targets))
+
+    if not targets:
+        print("No files to download.", file=sys.stderr)
+        return 0
 
     args = ["aria2c"] + ARIA2C_OPTS
     if directory:
@@ -36,6 +48,9 @@ def download(targets: List[Tuple[str, str]], *, directory: str = None):
     args.extend(["--input-file", path])
     print(" ".join(args), file=sys.stderr)
     try:
-        os.execvp("aria2c", args)
+        if execvp and os.name != "nt":
+            os.execvp("aria2c", args)
+        else:
+            return subprocess.call(args)
     except FileNotFoundError:
         raise RuntimeError("aria2c(1) not found")
