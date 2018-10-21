@@ -224,7 +224,7 @@ def main():
         print(msg, file=sys.stderr)
 
         if not args.dry and a2_targets:
-            aria2.download(a2_targets, directory=conf.directory)
+            sys.exit(aria2.download(a2_targets, directory=conf.directory))
     except Exception as exc:
         if debug:
             raise
