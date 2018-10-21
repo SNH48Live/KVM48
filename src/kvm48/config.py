@@ -10,7 +10,7 @@ import yaml
 from .koudai import VOD
 
 
-DEFAULT_CONFIG_DIR = os.path.expanduser("~/.config/kvm48")
+DEFAULT_CONFIG_DIR = os.path.normcase(os.path.expanduser("~/.config/kvm48"))
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_DIR, "config.yml")
 DEFAULT_NAMING_PATTERN = "%(date_c)s %(name)s口袋%(type)s %(title)s.%(ext)s"
 CONFIG_TEMPLATE = """\
