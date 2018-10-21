@@ -230,6 +230,12 @@ def main():
             raise
         else:
             sys.exit("%s: %s" % (type(exc).__name__, str(exc)))
+    except KeyboardInterrupt:
+        if debug:
+            raise
+        else:
+            print("Interrupted.", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
