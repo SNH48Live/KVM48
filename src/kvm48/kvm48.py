@@ -168,6 +168,9 @@ def main():
         targets = []
         a2_targets = []
         m3u8_targets = []
+        # *_unfinished_targets store targets that aren't already downloaded.
+        a2_unfinished_targets = []
+        m3u8_unfinished_targets = []
         existing_filepaths = set()
         for vod in reversed(list(vod_list)):
             if vod.name in conf.names:
@@ -187,15 +190,29 @@ def main():
                     filepath = "%s (%d)%s" % (base, number, ext)
                 existing_filepaths.add(filepath)
 
+                fullpath = os.path.join(conf.directory, filepath)
+
                 entry = (url, filepath)
                 targets.append(entry)
                 if src_ext == ".m3u8":
                     m3u8_targets.append(entry)
+                    if not os.path.exists(fullpath):
+                        m3u8_unfinished_targets.append(entry)
                 else:
                     a2_targets.append(entry)
+                    if not os.path.exists(fullpath) or os.path.exists(
+                        fullpath + ".aria2"
+                    ):
+                        a2_unfinished_targets.append(entry)
 
+        new_urls = set(
+            url for url, _ in a2_unfinished_targets + m3u8_unfinished_targets
+        )
         for url, filepath in targets:
-            print("%s\t%s" % (url, filepath))
+            if url in new_urls:
+                print("%s\t%s\t*" % (url, filepath))
+            else:
+                print("%s\t%s" % (url, filepath))
 
         if not args.dry and m3u8_targets:
             m3u8_list = os.path.join(conf.directory, "m3u8.txt")
@@ -217,14 +234,28 @@ def main():
                 file=sys.stderr,
             )
 
-        total_size, unknown_files = peek.peek_total_size(url for url, _ in a2_targets)
-        msg = "Total direct download size: {:,} bytes".format(total_size)
-        if unknown_files > 0:
-            msg += " (size of %d files cannot be determined)" % unknown_files
+        if a2_unfinished_targets:
+            total_size, unknown_files = peek.peek_total_size(
+                url for url, _ in a2_unfinished_targets
+            )
+            msg = "{} direct downloads, total size: {:,} bytes".format(
+                len(a2_unfinished_targets), total_size
+            )
+            if unknown_files > 0:
+                msg += " (size of %d files could not be determined)" % unknown_files
+        else:
+            msg = "No direct downloads."
         print(msg, file=sys.stderr)
 
-        if not args.dry and a2_targets:
-            sys.exit(aria2.download(a2_targets, directory=conf.directory))
+        if m3u8_unfinished_targets:
+            print(
+                "%d M3U8 VODs to download, total size unknown"
+                % len(m3u8_unfinished_targets),
+                file=sys.stderr,
+            )
+
+        if not args.dry and a2_unfinished_targets:
+            sys.exit(aria2.download(a2_unfinished_targets, directory=conf.directory))
     except Exception as exc:
         if debug:
             raise
