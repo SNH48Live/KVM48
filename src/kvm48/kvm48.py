@@ -51,7 +51,7 @@ YYYY-MM-DD or MM-DD format.
 - If neither --from nor --to is specified, use today (in UTC+08:00) as
   the to date, and determine span in the same way as above.
 
-KVM48 uses aria2 for direact downloads. Certain aria2c options, e.g.,
+KVM48 uses aria2 for direct downloads. Certain aria2c options, e.g.,
 --max-connection-per-server=16, are enforced within kvm48; most options
 should be configured directly in the aria2 config file.
 

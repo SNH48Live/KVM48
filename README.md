@@ -56,7 +56,7 @@ KVM48 downloads all streaming VODs of monitored members in a specified
 date range. Monitored members and other options are configured through
 the YAML configuration file
 
-  $HOME/.config/kvm48/config.yml
+  <An OS and environment dependent path ending in config.yml>
 
 or through a different configuration file specified with the --config
 option.
@@ -86,9 +86,21 @@ YYYY-MM-DD or MM-DD format.
 - If neither --from nor --to is specified, use today (in UTC+08:00) as
   the to date, and determine span in the same way as above.
 
-KVM48 uses aria2 as the downloader. Certain aria2c options, e.g.,
+KVM48 uses aria2 for direct downloads. Certain aria2c options, e.g.,
 --max-connection-per-server=16, are enforced within kvm48; most options
 should be configured directly in the aria2 config file.
+
+KVM48 optionally uses caterpillar[1] as the M3U8/HLS downloader.
+caterpillar is built on top of FFmpeg, the Swiss army knife of
+multimedia processing, but it is specifically engineered to not produce
+scrambled files when there are timestamp discontinuities or
+irregularities in the source, which is all too common with Koudai48's
+livestreaming infrastructure. If M3U8 streams are detected and
+caterpillar is either not found or does not meet the minimum version
+requirement, the URLs and supposed paths are written to disk for
+postprocessing at the user's discretion.
+
+[1] https://github.com/zmwangx/caterpillar
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -165,6 +177,16 @@ directory:
 # An example file name produced by this pattern is
 #   20180211 莫寒口袋直播 一人吃火锅的人生成就(๑˙ー˙๑).mp4
 naming:
+
+# Whether to put VODs in named subdirectories. If turned on, each member
+# will have her own subdirectory named after her where all her VODs will
+# go. Default is off.
+#
+# New in v0.3.
+# named_subdirs: off
+
+# Whether to allow daily update checks for KVM48. Default is on.
+# update_checks: on
 ```
 
 Here is a sample configuration for downloading the VODs of Team SⅡ members daily:
