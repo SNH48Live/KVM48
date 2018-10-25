@@ -84,6 +84,9 @@ naming:
 #
 # New in v0.3.
 # named_subdirs: off
+
+# Whether to allow daily update checks for KVM48. Default is on.
+# update_checks: on
 """
 
 
@@ -184,6 +187,10 @@ class Config(object):
         self.named_subdirs = obj.get("named_subdirs", False)
         if not isinstance(self.named_subdirs, bool):
             raise ConfigError("invalid named_subdirs; named_subdirs must be a boolean")
+
+        self.update_checks = obj.get("update_checks", True)
+        if not isinstance(self.update_checks, bool):
+            raise ConfigError("invalid update_checks; update_checks must be a boolean")
 
     def test_naming_pattern(self) -> None:
         try:

@@ -24,6 +24,7 @@ KVM48 is supported on macOS, Linux, other Unix-like systems, and Windows 10.
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Invocation examples](#invocation-examples)
+- [Privacy](#privacy)
 - [Roadmap](#roadmap)
 - [Reporting bugs](#reporting-bugs)
 - [License](#license)
@@ -268,6 +269,12 @@ We assume the sample configuration above (in particular, `span` is 2) in the fol
   https://mp4.48.cn/live/be5d3a46-8638-4850-a4e3-10f029dd01ff.mp4	20180211 孙芮口袋直播 哈哈哈精致girl.mp4
   https://mp4.48.cn/live/ffcfca63-e37f-4dcc-bc68-639ef223a648.mp4	20180211 戴萌口袋直播 尬聊一会会儿🤝.mp4
   ```
+
+## Privacy
+
+Starting with KVM48 v0.3, the application checks for update the first time you launch it on a calendar day so that improvements are adopted more quickly. This does mean hitting the update server, where your IP address may be anonymized (by stripping at least the last octet of an IPv4 address, or at least the last five hextets of an IPv6 address) and recorded to guage interest. Nothing else (other than the current version and possible new version) is transfered or recorded.
+
+You may permanently turn off the update checks by adding `update_checks: off` to your config file.
 
 ## Roadmap
 

@@ -8,7 +8,7 @@ import time
 
 import arrow
 
-from . import aria2, caterpillar, config, koudai, peek
+from . import aria2, caterpillar, config, koudai, peek, update
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -163,6 +163,9 @@ def main():
             raise ValueError(
                 "from date %s is later than to date %s" % (from_.date(), to_.date())
             )
+
+        if conf.update_checks:
+            update.check_update()
 
         print(
             "Searching for VODs in the date range %s to %s for: %s"
