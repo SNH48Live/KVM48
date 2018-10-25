@@ -7,10 +7,15 @@ import arrow
 import attrdict
 import yaml
 
+from .dirs import USER_CONFIG_DIR
 from .koudai import VOD
 
 
-DEFAULT_CONFIG_DIR = os.path.normcase(os.path.expanduser("~/.config/kvm48"))
+if os.path.exists(os.path.expanduser("~/.config/kvm48/config.yml")):
+    # Legacy config path is respected.
+    DEFAULT_CONFIG_DIR = os.path.normcase(os.path.expanduser("~/.config/kvm48/"))
+else:
+    DEFAULT_CONFIG_DIR = USER_CONFIG_DIR
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_DIR, "config.yml")
 DEFAULT_NAMING_PATTERN = "%(date_c)s %(name)s口袋%(type)s %(title)s.%(ext)s"
 CONFIG_TEMPLATE = """\
