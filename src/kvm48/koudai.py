@@ -91,9 +91,20 @@ def list_vods(
                 "lastTime": to_ms,
                 "limit": API_LIMIT,
             }
-            r = requests.post(
-                API_ENDPOINT, headers=API_HEADERS, json=payload, timeout=5
-            )
+            # Gradually increase timeout, and only raise on the third
+            # consecutive timeout.
+            for attempt in range(3):
+                try:
+                    r = requests.post(
+                        API_ENDPOINT,
+                        headers=API_HEADERS,
+                        json=payload,
+                        timeout=5 + 2 * attempt,
+                    )
+                    break
+                except requests.Timeout:
+                    if attempt == 2:
+                        raise
             vod_objs = r.json()["content"]["reviewList"]
         except Exception as exc:
             raise APIException(payload, exc)
