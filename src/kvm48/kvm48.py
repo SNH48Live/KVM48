@@ -4,10 +4,11 @@ import argparse
 import os
 import re
 import sys
+import time
 
 import arrow
 
-from . import aria2, config, koudai, peek
+from . import aria2, caterpillar, config, koudai, peek
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -50,9 +51,21 @@ YYYY-MM-DD or MM-DD format.
 - If neither --from nor --to is specified, use today (in UTC+08:00) as
   the to date, and determine span in the same way as above.
 
-KVM48 uses aria2 as the downloader. Certain aria2c options, e.g.,
+KVM48 uses aria2 for direact downloads. Certain aria2c options, e.g.,
 --max-connection-per-server=16, are enforced within kvm48; most options
 should be configured directly in the aria2 config file.
+
+KVM48 optionally uses caterpillar[1] as the M3U8/HLS downloader.
+caterpillar is built on top of FFmpeg, the Swiss army knife of
+multimedia processing, but it is specifically engineered to not produce
+scrambled files when there are timestamp discontinuities or
+irregularities in the source, which is all too common with Koudai48's
+livestreaming infrastructure. If M3U8 streams are detected and
+caterpillar is either not found or does not meet the minimum version
+requirement, the URLs and supposed paths are written to disk for
+postprocessing at the user's discretion.
+
+[1] https://github.com/zmwangx/caterpillar
 """
     % DEFAULT_CONFIG_FILE
 )
@@ -214,25 +227,24 @@ def main():
             else:
                 print("%s\t%s" % (url, filepath))
 
-        if not args.dry and m3u8_targets:
+        if not args.dry and conf.named_subdirs:
+            subdirs = set(
+                os.path.dirname(filepath)
+                for url, filepath in a2_unfinished_targets + m3u8_unfinished_targets
+            )
+            for subdir in subdirs:
+                try:
+                    os.mkdir(os.path.join(conf.directory, subdir))
+                except FileExistsError:
+                    pass
+
+        # Only write manifest for new targets
+        if not args.dry and m3u8_unfinished_targets:
             m3u8_list = os.path.join(conf.directory, "m3u8.txt")
             with open(m3u8_list, "w", encoding="utf-8") as fp:
-                for url, filepath in m3u8_targets:
+                for url, filepath in m3u8_unfinished_targets:
                     print("%s\t%s" % (url, filepath), file=fp)
-            if conf.named_subdirs:
-                subdirs = set(
-                    os.path.dirname(filepath) for url, filepath in m3u8_targets
-                )
-                for subdir in subdirs:
-                    try:
-                        os.mkdir(os.path.join(conf.directory, subdir))
-                    except FileExistsError:
-                        pass
-            print(
-                'Info of M3U8 VODs written to "%s" (could be consumed by caterpillar)'
-                % m3u8_list,
-                file=sys.stderr,
-            )
+            print('Info of M3U8 VODs written to "%s"' % m3u8_list, file=sys.stderr)
 
         if a2_unfinished_targets:
             total_size, unknown_files = peek.peek_total_size(
@@ -254,8 +266,47 @@ def main():
                 file=sys.stderr,
             )
 
+        sys.stderr.write("\n")
+
+        exit_status = 0
+
+        download_direct = bool(a2_unfinished_targets)
+        download_m3u8_vods = False
+        if not args.dry and m3u8_unfinished_targets:
+            met = caterpillar.check_caterpillar_requirement()
+            if not met:
+                # Print message, and sleep for a while so that user may
+                # see the message.
+                print(
+                    "[ERROR] caterpillar requirement not met, cannot download M3U8 VODs. "
+                    "Program will resume in 5 seconds...",
+                    file=sys.stderr,
+                )
+                time.sleep(5)
+                exit_status = 1
+            else:
+                download_m3u8_vods = True
+
         if not args.dry and a2_unfinished_targets:
-            sys.exit(aria2.download(a2_unfinished_targets, directory=conf.directory))
+            # If all that remains is aria2 download, we simply execvp
+            # into aria2 to free up resources held by the Python process
+            # (except on NT).
+            #
+            # Note that in execvp mode, aria2.download either raises
+            # (not found) or never returns.
+            print("\nProcessing direct downloads...", file=sys.stderr)
+            execvp = not download_m3u8_vods
+            exit_status |= aria2.download(
+                a2_unfinished_targets, directory=conf.directory, execvp=execvp
+            )
+
+        if not args.dry and m3u8_unfinished_targets and download_m3u8_vods:
+            # Likewise.
+            print("\nProcessing M3U8 VOD downloads...", file=sys.stderr)
+            execvp = not download_direct
+            exit_status |= caterpillar.download(m3u8_list, execvp=execvp)
+
+        sys.exit(exit_status)
     except Exception as exc:
         if debug:
             raise

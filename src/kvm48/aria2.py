@@ -21,7 +21,7 @@ ARIA2C_OPTS = [
 #
 # If aria2c is run in a subprocess, the return code is returned.
 def download(
-    targets: List[Tuple[str, str]], *, directory: str = None, execvp: bool = True
+    targets: List[Tuple[str, str]], *, directory: str = None, execvp: bool = False
 ) -> Optional[int]:
     def existing_file_filter(target: Tuple[str, str]) -> bool:
         url, filename = target

@@ -11,7 +11,7 @@ KVM48, the Koudai48 VOD Manager. It is capable of downloading all streaming VODs
 
 Not to be confused with [KVM for kernel version 4.8](https://git.kernel.org/pub/scm/virt/kvm/kvm.git/tag/?h=kvm-4.8-3).
 
-KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windows Subsystem for Linux, aka WSL); it is neither tested nor supported on Windows NT.
+KVM48 is supported on macOS, Linux, other Unix-like systems, and Windows 10.
 
 ## Contents
 
@@ -25,8 +25,6 @@ KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windo
 - [Configuration](#configuration)
 - [Invocation examples](#invocation-examples)
 - [Roadmap](#roadmap)
-  - [Native M3U8 VOD support](#native-m3u8-vod-support)
-  - [Livestream monitoring and recording](#livestream-monitoring-and-recording)
 - [Reporting bugs](#reporting-bugs)
 - [License](#license)
 
@@ -35,7 +33,8 @@ KVM48 is supported on macOS, Linux, and other Unix-like systems (including Windo
 ## Prerequisites
 
 - Python 3.5 or later;
-- [`aria2`](https://aria2.github.io/), KVM48's downloader of choice.
+- [`aria2`](https://aria2.github.io/), KVM48's downloader of choice;
+- [`caterpillar`](https://github.com/zmwangx/caterpillar), optional dependency for downloading M3U8/HLS VODs (`pip install caterpillar-hls`).
 
 ## Installation
 
@@ -272,19 +271,7 @@ We assume the sample configuration above (in particular, `span` is 2) in the fol
 
 ## Roadmap
 
-### Native M3U8 VOD support
-
-~Currently, when encountering M3U8 VOD URLs (from Yizhibo), KVM48 simply downloads them to disk like the MP4 VODs, rendering them useless. This is apparently not ideal.~ (Behavior has changed; see **Update** below.)
-
-I have already written an HLS downloader, [caterpillar](https://github.com/zmwangx/caterpillar) (which is based on FFmpeg, but parallelized and more resilient to crappy streams), in the past. The problem is integration: aria2c and caterpillar both produce helpful progress bars, but mixing the output streams of these two would be a nightmare.
-
-A basic plan here is to implement multiplexing through tmux.
-
-**Update.** Since v0.1.4, M3U8 entries are written to a manifest file, suitable for direct consumption with [caterpillar](https://github.com/zmwangx/caterpillar). Native support with duplexing won't come in the forseeable future.
-
-### Livestream monitoring and recording
-
-This is somewhat out of scope, but not hard to implement once we've figured out multiplexing.
+No plans at the moment.
 
 ## Reporting bugs
 
