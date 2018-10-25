@@ -25,7 +25,9 @@ def pep440ify(version_string: str) -> str:
 def check_caterpillar_requirement(warn: bool = True) -> bool:
     try:
         raw_version = (
-            subprocess.check_output(["caterpillar", "--version"])
+            subprocess.check_output(
+                ["caterpillar", "--version"], stderr=subprocess.DEVNULL
+            )
             .decode("utf-8")
             .strip()
         )
@@ -35,6 +37,10 @@ def check_caterpillar_requirement(warn: bool = True) -> bool:
                 "[ERROR] caterpillar(1) not found; see https://github.com/zmwangx/caterpillar.",
                 file=sys.stderr,
             )
+        return False
+    except subprocess.CalledProcessError:
+        if warn:
+            print("[ERROR] caterpillar --version failed", file=sys.stderr)
         return False
     try:
         version = NormalizedVersion(pep440ify(raw_version))
