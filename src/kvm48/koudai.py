@@ -78,12 +78,21 @@ def list_vods(
     to_ms = _epoch_ms(to_)
     start_time = time.time()
     progress_written = False
+    progress_dots = 0
     while from_ms < to_ms:
         try:
             if show_progress and time.time() - start_time >= show_progress_threshold:
+                if progress_dots > 0 and progress_dots % 30 == 0:
+                    sys.stderr.write(
+                        "\nSearching for VODs before %s\n"
+                        % (arrow.get(to_ms / 1000).to("Asia/Shanghai")).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                    )
                 sys.stderr.write(".")
                 sys.stderr.flush()
                 progress_written = True
+                progress_dots += 1
             payload = {
                 "type": 0,
                 "memberId": member_id,
