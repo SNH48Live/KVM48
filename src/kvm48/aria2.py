@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-import tempfile
 from typing import List, Optional, Tuple
 
 # Override some bad defaults.
@@ -14,44 +13,37 @@ ARIA2C_OPTS = [
 ]
 
 
-# targets is a list of (url, filename) pairs.
-#
-# If execvp is False or the underlying OS is Windows NT, execute aria2c
-# in a subprocess; otherwise, replace the process with execvp.
-#
-# If aria2c is run in a subprocess, the return code is returned.
-def download(
-    targets: List[Tuple[str, str]], *, directory: str = None, execvp: bool = False
-) -> Optional[int]:
-    def existing_file_filter(target: Tuple[str, str]) -> bool:
-        url, filename = target
-        path = os.path.join(directory, filename) if directory else filename
-        if os.path.exists(path) and not os.path.exists(path + ".aria2"):
-            print("'%s' already exists" % path, file=sys.stderr)
-            return False  # File exists, filter this out
-        else:
-            return True
-
-    targets = list(filter(existing_file_filter, targets))
-
-    if not targets:
-        print("No files to download.", file=sys.stderr)
-        return 0
-
-    args = ["aria2c"] + ARIA2C_OPTS
-    if directory:
-        args.append("--dir=%s" % directory)
-    fd, path = tempfile.mkstemp(prefix="kvm48.", suffix=".aria2in")
-    with os.fdopen(fd, "w", encoding="utf-8") as fp:
-        for url, filename in targets:
+# Returns the list of targets that are actually written (not already
+# downloaded).
+def write_manifest(
+    targets: List[Tuple[str, str]], path: str, *, target_directory: str = None
+) -> List[Tuple[str, str]]:
+    written_targets = []
+    with open(path, "w", encoding="utf-8") as fp:
+        for target in targets:
+            url, filepath = target
+            filepath = (
+                os.path.join(target_directory, filepath)
+                if target_directory
+                else filepath
+            )
+            if os.path.exists(filepath) and not os.path.exists(filepath + ".aria2"):
+                continue
+            filedir = os.path.dirname(filepath)
+            filename = os.path.basename(filepath)
             print(url, file=fp)
+            if filedir:
+                print("\tdir=%s" % filedir, file=fp)
             print("\tout=%s" % filename, file=fp)
-    args.extend(["--input-file", path])
+            written_targets.append(target)
+    return written_targets
+
+
+# The return value is the exit status of aria2.
+def download(manifest: str) -> int:
+    args = ["aria2c", *ARIA2C_OPTS, "--input-file", manifest]
     print(" ".join(args), file=sys.stderr)
     try:
-        if execvp and os.name != "nt":
-            os.execvp("aria2c", args)
-        else:
-            return subprocess.call(args)
+        return subprocess.call(args)
     except FileNotFoundError:
         raise RuntimeError("aria2c(1) not found")

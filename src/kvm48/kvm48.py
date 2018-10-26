@@ -291,17 +291,36 @@ def main():
                 download_m3u8_vods = True
 
         if not args.dry and a2_unfinished_targets:
-            # If all that remains is aria2 download, we simply execvp
-            # into aria2 to free up resources held by the Python process
-            # (except on NT).
-            #
-            # Note that in execvp mode, aria2.download either raises
-            # (not found) or never returns.
-            print("\nProcessing direct downloads...", file=sys.stderr)
-            execvp = not download_m3u8_vods
-            exit_status |= aria2.download(
-                a2_unfinished_targets, directory=conf.directory, execvp=execvp
-            )
+            a2_manifest = os.path.join(conf.directory, "aria2.txt")
+            for attempt in range(3):
+                if attempt == 0:
+                    sys.stderr.write("\nProcessing direct downloads with aria2...\n\n")
+                else:
+                    sys.stderr.write("\nRetrying direct downloads with aria2...\n\n")
+                a2_unfinished_targets = aria2.write_manifest(
+                    a2_unfinished_targets, a2_manifest, target_directory=conf.directory
+                )
+                a2_exit_status = aria2.download(a2_manifest)
+                if a2_exit_status == 0:
+                    os.unlink(a2_manifest)
+                    a2_unfinished_targets = []
+                    break
+            else:
+                a2_unfinished_targets = aria2.write_manifest(
+                    a2_unfinished_targets, a2_manifest, target_directory=conf.directory
+                )
+                # TODO: error summary at the very end.
+                sys.stderr.write(
+                    "\n[ERROR] aria2 failed to download the following VODs:\n\n"
+                )
+                for url, filepath in a2_unfinished_targets:
+                    sys.stderr.write("\t%s\t%s\n" % (url, filepath))
+                sys.stderr.write(
+                    "\naria2 batch input file have been written to '%s' "
+                    "in case you want to retry manually.\n\n" % a2_manifest
+                )
+                exit_status = 1
+                time.sleep(5)
 
         if not args.dry and m3u8_unfinished_targets and download_m3u8_vods:
             # Likewise.
