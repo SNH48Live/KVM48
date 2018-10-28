@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 [[ $PYTHON_VERSION == 3.* ]] || { echo "[ERROR] Invalid PYTHON_VERSION $PYTHON_VERSION" >&2; exit 1; }
 mkdir -p data
 cat > data/kvm48-config.yml <<'EOF'
@@ -18,17 +19,16 @@ names:
 - 张语格
 span: 3
 directory: /data
+named_subdirs: true
+update_checks: off
 EOF
 
 sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml
-[[ -f data/m3u8.txt ]] && sudo docker run -it --rm -v "$PWD/data:/data" zmwangx/caterpillar:pypi --debug --jobs 16 --batch /data/m3u8.txt
-rm -f data/m3u8.txt data/*.mp4
+rm -f data/*/*.mp4
 
-# Test a known date range with m3u8 URLs to download.
-sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml --from 2018-09-17 --to 2018-09-17
-[[ -f data/m3u8.txt ]] || { echo "[ERROR] m3u8.txt not found" >&2; exit 1; }
-sudo docker run -it --rm -v "$PWD/data:/data" zmwangx/caterpillar:pypi --debug --jobs 16 --batch /data/m3u8.txt
-rm -f data/m3u8.txt data/*.mp4
+# Test a known date range with both mp4 and m3u8 URLs to download.
+sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml --from 2018-10-25 --to 2018-10-27
+rm -f data/*/*.mp4
 
 rm data/kvm48-config.yml
 ls -lh data
