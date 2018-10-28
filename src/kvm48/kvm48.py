@@ -306,7 +306,6 @@ def main():
                 a2_unfinished_targets = aria2.write_manifest(
                     a2_unfinished_targets, a2_manifest, target_directory=conf.directory
                 )
-                # TODO: error summary at the very end.
                 sys.stderr.write(
                     "\n[ERROR] aria2 failed to download the following VODs:\n\n"
                 )
