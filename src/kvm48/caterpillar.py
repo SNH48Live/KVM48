@@ -1,14 +1,13 @@
 import os
 import subprocess
 import sys
-from typing import Optional
+from typing import List, Tuple
 
 from distlib.version import NormalizedVersion, UnsupportedVersionError
 
 
 # v1.0b1: --exist-ok
-# v1.0b2: --remove-manifest-on-success
-MINIMUM_CATERPILLAR_VERSION = "1.0b2"
+MINIMUM_CATERPILLAR_VERSION = "1.0b1"
 
 
 # Transform my cavalier version numbers for PEP-440 compilance.
@@ -33,53 +32,62 @@ def check_caterpillar_requirement(warn: bool = True) -> bool:
         )
     except FileNotFoundError:
         if warn:
-            print(
-                "[ERROR] caterpillar(1) not found; see https://github.com/zmwangx/caterpillar.",
-                file=sys.stderr,
+            sys.stderr.write(
+                "\n[ERROR] caterpillar(1) not found; see https://github.com/zmwangx/caterpillar\n"
             )
         return False
     except subprocess.CalledProcessError:
         if warn:
-            print("[ERROR] caterpillar --version failed", file=sys.stderr)
+            sys.stderr.write("\n[ERROR] caterpillar --version failed\n")
         return False
     try:
         version = NormalizedVersion(pep440ify(raw_version))
     except UnsupportedVersionError:
         if warn:
-            print(
-                "[WARNING] failed to recognize caterpillar version %s; "
-                "upgrade to at least v%s if you run into problems"
-                % (repr(raw_version), MINIMUM_CATERPILLAR_VERSION),
-                file=sys.stderr,
+            sys.stderr.write(
+                "\n[WARNING] failed to recognize caterpillar version %s; "
+                "upgrade to at least v%s if you run into problems\n"
+                % (repr(raw_version), MINIMUM_CATERPILLAR_VERSION)
             )
         # Fingers crossed
         return True
     if version < NormalizedVersion(MINIMUM_CATERPILLAR_VERSION):
         if warn:
-            print(
-                "[ERROR] caterpillar version %s is too low; "
-                "please upgrade to at least v%s"
-                % (raw_version, MINIMUM_CATERPILLAR_VERSION),
-                file=sys.stderr,
+            sys.stderr.write(
+                "\n[ERROR] caterpillar version %s is too low; "
+                "please upgrade to at least v%s\n"
+                % (raw_version, MINIMUM_CATERPILLAR_VERSION)
             )
         return False
     return True
 
 
-# execvp: see aria2.download.
-def download(batch_manifest: str, execvp: bool = False) -> Optional[int]:
-    args = [
-        "caterpillar",
-        "--batch",
-        "--exist-ok",
-        "--remove-manifest-on-success",
-        batch_manifest,
-    ]
+# Returns the list of targets that are actually written (not already
+# downloaded).
+def write_manifest(
+    targets: List[Tuple[str, str]], path: str, *, target_directory: str = None
+) -> List[Tuple[str, str]]:
+    written_targets = []
+    with open(path, "w", encoding="utf-8") as fp:
+        for target in targets:
+            url, filepath = target
+            filepath = (
+                os.path.join(target_directory, filepath)
+                if target_directory
+                else filepath
+            )
+            if os.path.exists(filepath):
+                continue
+            print("%s\t%s" % (url, filepath), file=fp)
+            written_targets.append(target)
+    return written_targets
+
+
+# The return value is the exit status of aria2.
+def download(manifest: str) -> int:
+    args = ["caterpillar", "--batch", "--exist-ok", manifest]
     print(" ".join(args), file=sys.stderr)
     try:
-        if execvp and os.name != "nt":
-            os.execvp("caterpillar", args)
-        else:
-            return subprocess.call(args)
+        return subprocess.call(args)
     except FileNotFoundError:
         raise RuntimeError("caterpillar(1) not found")

@@ -223,8 +223,7 @@ class Config(object):
             return
         with open(DEFAULT_CONFIG_FILE, "w", encoding="utf-8") as fp:
             fp.write(CONFIG_TEMPLATE)
-        print(
-            ("Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE)
-            + "Please edit the file to suit your needs before using kvm48.\n",
-            file=sys.stderr,
+        sys.stderr.write(
+            "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
+            + "Please edit the file to suit your needs before using kvm48.\n\n"
         )

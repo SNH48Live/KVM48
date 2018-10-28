@@ -241,14 +241,7 @@ def main():
                 except FileExistsError:
                     pass
 
-        # Only write manifest for new targets
-        if not args.dry and m3u8_unfinished_targets:
-            m3u8_list = os.path.join(conf.directory, "m3u8.txt")
-            with open(m3u8_list, "w", encoding="utf-8") as fp:
-                for url, filepath in m3u8_unfinished_targets:
-                    print("%s\t%s" % (url, filepath), file=fp)
-            print('Info of M3U8 VODs written to "%s"' % m3u8_list, file=sys.stderr)
-
+        # Report download sizes.
         if a2_unfinished_targets:
             total_size, unknown_files = peek.peek_total_size(
                 url for url, _ in a2_unfinished_targets
@@ -258,37 +251,28 @@ def main():
             )
             if unknown_files > 0:
                 msg += " (size of %d files could not be determined)" % unknown_files
+            msg += "\n"
+            sys.stderr.write(msg)
         else:
-            msg = "No direct downloads."
-        print(msg, file=sys.stderr)
+            sys.stderr.write("No new direct downloads.\n")
 
         if m3u8_unfinished_targets:
-            print(
-                "%d M3U8 VODs to download, total size unknown"
-                % len(m3u8_unfinished_targets),
-                file=sys.stderr,
+            sys.stderr.write(
+                "%d M3U8 VODs to download, total size unknown\n"
+                % len(m3u8_unfinished_targets)
             )
-
-        sys.stderr.write("\n")
+        else:
+            sys.stderr.write("No new M3U8 downloads.\n")
 
         exit_status = 0
 
-        download_direct = bool(a2_unfinished_targets)
-        download_m3u8_vods = False
+        # Write the caterpillar manifest first so that we don't need to
+        # wait until aria2 is finished.
+        m3u8_manifest = os.path.join(conf.directory, "m3u8.txt")
         if not args.dry and m3u8_unfinished_targets:
-            met = caterpillar.check_caterpillar_requirement()
-            if not met:
-                # Print message, and sleep for a while so that user may
-                # see the message.
-                print(
-                    "[ERROR] caterpillar requirement not met, cannot download M3U8 VODs. "
-                    "Program will resume in 5 seconds...",
-                    file=sys.stderr,
-                )
-                time.sleep(5)
-                exit_status = 1
-            else:
-                download_m3u8_vods = True
+            m3u8_unfinished_targets = caterpillar.write_manifest(
+                m3u8_unfinished_targets, m3u8_manifest, target_directory=conf.directory
+            )
 
         if not args.dry and a2_unfinished_targets:
             a2_manifest = os.path.join(conf.directory, "aria2.txt")
@@ -322,11 +306,59 @@ def main():
                 exit_status = 1
                 time.sleep(5)
 
-        if not args.dry and m3u8_unfinished_targets and download_m3u8_vods:
-            # Likewise.
-            print("\nProcessing M3U8 VOD downloads...", file=sys.stderr)
-            execvp = not download_direct
-            exit_status |= caterpillar.download(m3u8_list, execvp=execvp)
+        if not args.dry and m3u8_unfinished_targets:
+            requirement_met = caterpillar.check_caterpillar_requirement()
+            if not requirement_met:
+                sys.stderr.write(
+                    "\n[ERROR] caterpillar requirement not met, cannot download M3U8 VODs.\n"
+                    "caterpillar batch manifest has been written to '%s'.\n\n"
+                    % m3u8_manifest
+                )
+                exit_status = 1
+            else:
+                for attempt in range(3):
+                    if attempt == 0:
+                        sys.stderr.write(
+                            "\nProcessing M3U8 downloads with caterpillar...\n\n"
+                        )
+                    else:
+                        sys.stderr.write(
+                            "\nRetrying M3U8 downloads with caterpillar...\n\n"
+                        )
+                    m3u8_unfinished_targets = caterpillar.write_manifest(
+                        m3u8_unfinished_targets,
+                        m3u8_manifest,
+                        target_directory=conf.directory,
+                    )
+                    caterpillar_exit_status = caterpillar.download(m3u8_manifest)
+                    if caterpillar_exit_status == 0:
+                        os.unlink(m3u8_manifest)
+                        m3u8_unfinished_targets = []
+                        break
+                else:
+                    m3u8_unfinished_targets = caterpillar.write_manifest(
+                        m3u8_unfinished_targets,
+                        m3u8_manifest,
+                        target_directory=conf.directory,
+                    )
+                    sys.stderr.write(
+                        "\n[ERROR] caterpillar failed to download the following VODs:\n\n"
+                    )
+                    for url, filepath in m3u8_unfinished_targets:
+                        sys.stderr.write("\t%s\t%s\n" % (url, filepath))
+                    sys.stderr.write(
+                        "\ncaterpillar batch manifest have been written to '%s' "
+                        "in case you want to retry manually.\n\n" % m3u8_manifest
+                    )
+                    exit_status = 1
+
+        if exit_status == 0:
+            sys.stderr.write("All is well.\n")
+        else:
+            sys.stderr.write(
+                "[SUMMARY] %d direct downloads failed, %d M3U8 downloads failed\n"
+                % (len(a2_unfinished_targets), len(m3u8_unfinished_targets))
+            )
 
         sys.exit(exit_status)
     except Exception as exc:
