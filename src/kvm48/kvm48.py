@@ -273,17 +273,20 @@ def main():
         else:
             sys.stderr.write("No new M3U8 downloads.\n")
 
+        if args.dry:
+            sys.exit(0)
+
         exit_status = 0
 
         # Write the caterpillar manifest first so that we don't need to
         # wait until aria2 is finished.
         m3u8_manifest = os.path.join(conf.directory, "m3u8.txt")
-        if not args.dry and m3u8_unfinished_targets:
+        if m3u8_unfinished_targets:
             m3u8_unfinished_targets = caterpillar.write_manifest(
                 m3u8_unfinished_targets, m3u8_manifest, target_directory=conf.directory
             )
 
-        if not args.dry and a2_unfinished_targets:
+        if a2_unfinished_targets:
             a2_manifest = os.path.join(conf.directory, "aria2.txt")
             for attempt in range(3):
                 if attempt == 0:
@@ -315,7 +318,7 @@ def main():
                 exit_status = 1
                 time.sleep(5)
 
-        if not args.dry and m3u8_unfinished_targets:
+        if m3u8_unfinished_targets:
             requirement_met = caterpillar.check_caterpillar_requirement()
             if not requirement_met:
                 sys.stderr.write(
