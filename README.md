@@ -48,7 +48,7 @@ pip install KVM48
 ```console
 $ kvm48 --help
 usage: kvm48 [-h] [-f FROM] [-t TO] [-s SPAN] [--dry] [--config CONFIG]
-             [--version] [--debug]
+             [--edit] [--version] [--debug]
 
 KVM48, the Koudai48 VOD Manager.
 
@@ -109,6 +109,7 @@ optional arguments:
   -s SPAN, --span SPAN  number of days in date range
   --dry                 print URL & filename combos but do not download
   --config CONFIG       use this config file instead of the default
+  --edit                open text editor to edit the config file
   --version             show program's version number and exit
   --debug
 ```

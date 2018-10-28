@@ -8,7 +8,7 @@ import time
 
 import arrow
 
-from . import aria2, caterpillar, config, koudai, peek, update
+from . import aria2, caterpillar, config, edit, koudai, peek, update
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -132,11 +132,20 @@ def main():
             help="print URL & filename combos but do not download",
         )
         newarg("--config", help="use this config file instead of the default")
+        newarg(
+            "--edit",
+            action="store_true",
+            help="open text editor to edit the config file",
+        )
         newarg("--version", action="version", version=__version__)
         newarg("--debug", action="store_true")
         args = parser.parse_args()
 
         debug = args.debug
+
+        if args.edit:
+            edit.launch_editor(args.config or config.DEFAULT_CONFIG_FILE)
+            sys.exit(0)
 
         conf.load(args.config)
 
