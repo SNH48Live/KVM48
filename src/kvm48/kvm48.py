@@ -127,6 +127,7 @@ def main():
         )
         newarg("-s", "--span", type=int, help="number of days in date range")
         newarg(
+            "-n",
             "--dry",
             action="store_true",
             help="print URL & filename combos but do not download",
