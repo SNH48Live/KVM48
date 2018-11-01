@@ -1,5 +1,4 @@
 import os
-import re
 import sys
 from typing import List
 
@@ -9,6 +8,7 @@ import yaml
 
 from .dirs import USER_CONFIG_DIR
 from .koudai import VOD
+from .utils import extension_from_url, sanitize_filename
 
 
 if os.path.exists(os.path.expanduser("~/.config/kvm48/config.yml")):
@@ -87,6 +87,25 @@ naming:
 
 # Whether to allow daily update checks for KVM48. Default is on.
 # update_checks: on
+
+# Perf mode specific settings (--mode perf).
+#
+# New in v0.5.
+perf:
+  # Perf mode verrides (defaults to corresponding global settings).
+
+  # group_id:
+
+  # span:
+
+  # directory:
+
+  # In perf mode, if named_subdirs is on, subdirectories are named after
+  # titles of stages, e.g., 美丽48区. Note however that since in perf
+  # mode users are prompted to review the download list and manually
+  # edit the paths as they see fit, this setting only affects the
+  # recommended paths and can be manually overridden.
+  # named_subdirs:
 """
 
 
@@ -96,52 +115,19 @@ class ConfigError(Exception):
 
 class Config(object):
     def __init__(self):
-        self.group_id = 0  # type: int
+        self.mode = "std"  # type: str
+        self._group_id = 0  # type: int
         self.names = []  # type: List[str]
-        self.span = 1  # type: int
-        self.directory = None  # type: str
+        self._span = 1  # type: int
+        self._directory = None  # type: str
         self.naming = DEFAULT_NAMING_PATTERN  # type: str
-        self.named_subdirs = False  # type: bool
-
-    def filename(self, vod: VOD) -> str:
-        unsanitized = self.naming % {
-            "date": vod.start_time.strftime("%Y-%m-%d"),
-            "date_c": vod.start_time.strftime("%Y%m%d"),
-            "datetime": vod.start_time.strftime("%Y-%m-%d %H.%M.%S"),
-            "datetime_c": vod.start_time.strftime("%Y%m%d%H%M%S"),
-            "id": vod.id,
-            "name": vod.name,
-            "type": vod.type,
-            "title": vod.title.strip(),
-            "ext": os.path.splitext(vod.vod_url)[1][1:],
-        }
-        # Strip control characters (0x00-0x1F, 0x7F), and use homoglyphs
-        # (Halfwidth and Fullwidth Forms block, U+FF00 - U+FFEF) for
-        # characters illegal in exFAT/NTFS:
-        #
-        # " => U+FF02 FULLWIDTH QUOTATION MARK (＂)
-        # * => U+FF0A FULLWIDTH ASTERISK (＊)
-        # / => U+FF0F FULLWIDTH SOLIDUS (／)
-        # : => U+FF1A FULLWIDTH COLON (：)
-        # < => U+FF1C FULLWIDTH LESS-THAN SIGN (＜)
-        # > => U+FF1E FULLWIDTH GREATER-THAN SIGN (＞)
-        # ? => U+FF1F FULLWIDTH QUESTION MARK (？)
-        # \ => U+FF3C FULLWIDTH REVERSE SOLIDUS (＼)
-        # | => U+FF5C FULLWIDTH VERTICAL LINE (｜)
-        #
-        # Also replace whitespace characters with the space
-        return re.sub(r"[\x00-\x1f\x7f]+", "", unsanitized).translate(
-            str.maketrans(
-                '"*/:<>?\\|\t\n\r\f\v',
-                "\uFF02\uFF0A\uFF0F\uFF1A\uFF1C\uFF1E\uFF1F\uFF3C\uFF5C     ",
-            )
-        )
-
-    def filepath(self, vod: VOD) -> str:
-        if self.named_subdirs:
-            return vod.name + os.sep + self.filename(vod)
-        else:
-            return self.filename(vod)
+        self._named_subdirs = False  # type: bool
+        self.update_checks = True  # type: bool
+        self._perf = dict()  # type: Dict[str, Any]
+        self._perf_group_id = 0  # type: int
+        self._perf_span = 1  # type: int
+        self._perf_directory = None  # type: str
+        self._perf_named_subdirs = False  # type: bool
 
     def load(self, config_file: str = None) -> None:
         if not config_file:
@@ -153,10 +139,10 @@ class Config(object):
             raise ConfigError("failed to load/parse %s: %s" % (config_file, str(exc)))
 
         try:
-            self.group_id = int(obj.get("group_id") or 0)
+            self._group_id = int(obj.get("group_id") or 0)
         except ValueError:
             raise ConfigError("invalid group_id; must be an integer")
-        if self.group_id not in (0, 10, 11, 12, 13, 14):
+        if self._group_id not in (0, 10, 11, 12, 13, 14):
             raise ConfigError(
                 "unrecognized group_id; must be one of 0, 10, 11, 12, 13, and 14"
             )
@@ -168,7 +154,7 @@ class Config(object):
             raise ConfigError("invalid names; names must be a nonempty list of strings")
 
         try:
-            self.span = max(int(obj.get("span") or 1), 1)
+            self._span = max(int(obj.get("span") or 1), 1)
         except ValueError:
             raise ConfigError("invalid span; must be an integer")
 
@@ -177,20 +163,128 @@ class Config(object):
             directory = os.path.abspath(os.path.expanduser(directory))
             if not os.path.isdir(directory):
                 raise ConfigError("nonexistent directory: %s" % directory)
-            self.directory = directory
+            self._directory = directory
         else:
-            self.directory = os.getcwd()
+            self._directory = os.getcwd()
 
         self.naming = obj.get("naming") or DEFAULT_NAMING_PATTERN
         self.test_naming_pattern()
 
-        self.named_subdirs = obj.get("named_subdirs", False)
-        if not isinstance(self.named_subdirs, bool):
+        self._named_subdirs = obj.get("named_subdirs", False)
+        if not isinstance(self._named_subdirs, bool):
             raise ConfigError("invalid named_subdirs; named_subdirs must be a boolean")
 
         self.update_checks = obj.get("update_checks", True)
         if not isinstance(self.update_checks, bool):
             raise ConfigError("invalid update_checks; update_checks must be a boolean")
+
+        self._perf = obj.get("perf") or dict()
+        if not isinstance(self._perf, dict):
+            raise ConfigError("invalid perf section; perf must be a dict")
+
+        self._perf_directory = os.path.abspath(
+            os.path.expanduser(self._perf.get("directory") or self._directory)
+        )
+        if not os.path.isdir(self._perf_directory):
+            raise ConfigError("nonexistent perf.directory: %s" % self._perf_directory)
+
+        try:
+            self._perf_span = max(int(self._perf.get("span") or self._span), 1)
+        except ValueError:
+            raise ConfigError("invalid perf.span; must be an integer")
+
+        try:
+            self._perf_group_id = int(self._perf.get("group_id") or self._group_id)
+        except ValueError:
+            raise ConfigError("invalid group_id; must be an integer")
+        if self._perf_group_id not in (0, 10, 11, 12, 13, 14):
+            raise ConfigError(
+                "unrecognized perf.group_id; must be one of 0, 10, 11, 12, 13, and 14"
+            )
+
+        self._perf_named_subdirs = self._perf.get("named_subdirs", self._named_subdirs)
+        if not isinstance(self._perf_named_subdirs, bool):
+            raise ConfigError("invalid perf.named_subdirs; must be a boolean")
+
+    @staticmethod
+    def dump_config_template():
+        if not os.path.isdir(DEFAULT_CONFIG_DIR):
+            os.makedirs(DEFAULT_CONFIG_DIR, mode=0o700)
+        if (
+            os.path.isfile(DEFAULT_CONFIG_FILE)
+            and os.stat(DEFAULT_CONFIG_FILE).st_size > 0
+        ):
+            return
+        with open(DEFAULT_CONFIG_FILE, "w", encoding="utf-8") as fp:
+            fp.write(CONFIG_TEMPLATE)
+        sys.stderr.write(
+            "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
+            + "Please edit the file to suit your needs before using kvm48.\n\n"
+        )
+
+    @property
+    def group_id(self) -> int:
+        if self.mode == "std":
+            return self._group_id
+        elif self.mode == "perf":
+            return self._perf_group_id
+        else:
+            raise ConfigError("unrecognized mode %s" % repr(self.mode))
+
+    @property
+    def span(self) -> int:
+        if self.mode == "std":
+            return self._span
+        elif self.mode == "perf":
+            return self._perf_span
+        else:
+            raise ConfigError("unrecognized mode %s" % repr(self.mode))
+
+    @property
+    def directory(self) -> str:
+        if self.mode == "std":
+            return self._directory
+        elif self.mode == "perf":
+            return self._perf_directory
+        else:
+            raise ConfigError("unrecognized mode %s" % repr(self.mode))
+
+    @property
+    def named_subdirs(self) -> bool:
+        if self.mode == "std":
+            return self._named_subdirs
+        elif self.mode == "perf":
+            return self._perf_named_subdirs
+        else:
+            raise ConfigError("unrecognized mode %s" % repr(self.mode))
+
+    @property
+    def group_name(self) -> str:
+        return self._get_group_name(self.group_id)
+
+    def filename(self, vod: VOD) -> str:
+        if hasattr(vod, "filename") and vod.filename:
+            return vod.filename
+        unsanitized = self.naming % {
+            "date": vod.start_time.strftime("%Y-%m-%d"),
+            "date_c": vod.start_time.strftime("%Y%m%d"),
+            "datetime": vod.start_time.strftime("%Y-%m-%d %H.%M.%S"),
+            "datetime_c": vod.start_time.strftime("%Y%m%d%H%M%S"),
+            "id": vod.id,
+            "name": vod.name,
+            "type": vod.type,
+            "title": vod.title.strip(),
+            "ext": extension_from_url(vod.vod_url),
+        }
+        return sanitize_filename(unsanitized)
+
+    def filepath(self, vod: VOD) -> str:
+        if hasattr(vod, "filepath") and vod.filepath:
+            return vod.filepath
+        if self.named_subdirs and hasattr(vod, "name"):
+            return sanitize_filename(vod.name or "其它") + os.sep + self.filename(vod)
+        else:
+            return self.filename(vod)
 
     def test_naming_pattern(self) -> None:
         try:
@@ -213,17 +307,18 @@ class Config(object):
             raise ConfigError("bad naming pattern: %s" % self.naming)
 
     @staticmethod
-    def dump_config_template():
-        if not os.path.isdir(DEFAULT_CONFIG_DIR):
-            os.makedirs(DEFAULT_CONFIG_DIR, mode=0o700)
-        if (
-            os.path.isfile(DEFAULT_CONFIG_FILE)
-            and os.stat(DEFAULT_CONFIG_FILE).st_size > 0
-        ):
-            return
-        with open(DEFAULT_CONFIG_FILE, "w", encoding="utf-8") as fp:
-            fp.write(CONFIG_TEMPLATE)
-        sys.stderr.write(
-            "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
-            + "Please edit the file to suit your needs before using kvm48.\n\n"
-        )
+    def _get_group_name(group_id: int) -> str:
+        if group_id == 0:
+            return "48G"
+        elif group_id == 10:
+            return "SNH48"
+        elif group_id == 11:
+            return "BEJ48"
+        elif group_id == 12:
+            return "GNZ48"
+        elif group_id == 13:
+            return "SHY48"
+        elif group_id == 14:
+            return "CKG48"
+        else:
+            raise ValueError("unrecognized group id %d" % group_id)

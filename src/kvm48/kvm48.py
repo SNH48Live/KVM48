@@ -4,11 +4,12 @@ import argparse
 import os
 import re
 import sys
+import tempfile
 import time
 
 import arrow
 
-from . import aria2, caterpillar, config, edit, koudai, peek, update
+from . import aria2, caterpillar, config, edit, koudai, peek, persistence, update, utils
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -110,6 +111,15 @@ def main():
         )
         newarg = parser.add_argument
         newarg(
+            "-m",
+            "--mode",
+            choices=["std", "perf"],
+            default="std",
+            help="operation mode (std or perf): "
+            "std is the standard mode for downloading individual members' VODs; "
+            "perf is the mode for downloading performance VODs",
+        )
+        newarg(
             "-f",
             "--from",
             dest="from_",
@@ -142,12 +152,14 @@ def main():
         newarg("--debug", action="store_true")
         args = parser.parse_args()
 
+        mode = args.mode
         debug = args.debug
 
         if args.edit:
             edit.launch_editor(args.config or config.DEFAULT_CONFIG_FILE)
             sys.exit(0)
 
+        conf.mode = args.mode
         conf.load(args.config)
 
         if args.span is not None and args.span <= 0:
@@ -177,19 +189,96 @@ def main():
         if conf.update_checks:
             update.check_update()
 
-        print(
-            "Searching for VODs in the date range %s to %s for: %s"
-            % (from_.date(), to_.date(), ", ".join(conf.names)),
-            file=sys.stderr,
-        )
-
-        vod_list = koudai.list_vods(
-            from_,
-            to_.shift(days=1),
-            group_id=conf.group_id,
-            show_progress=True,
-            show_progress_threshold=5,
-        )
+        if mode == "std":
+            sys.stderr.write(
+                "Searching for VODs in the date range %s to %s for: %s\n"
+                % (from_.date(), to_.date(), ", ".join(conf.names))
+            )
+            vod_list = list(
+                reversed(
+                    list(
+                        koudai.list_vods(
+                            from_,
+                            to_.shift(days=1),
+                            group_id=conf.group_id,
+                            show_progress=True,
+                            show_progress_threshold=5,
+                        )
+                    )
+                )
+            )
+        elif mode == "perf":
+            sys.stderr.write(
+                "Searching for VODs in the date range %s to %s for %s\n"
+                % (from_.date(), to_.date(), conf.group_name)
+            )
+            vod_list = list(
+                reversed(
+                    list(
+                        koudai.list_perf_vods(
+                            from_,
+                            to_.shift(days=1),
+                            group_id=conf.group_id,
+                            show_progress=True,
+                            show_progress_threshold=5,
+                        )
+                    )
+                )
+            )
+            tmpfd, tmpfile = tempfile.mkstemp(suffix=".txt", prefix="kvm48-")
+            try:
+                existing_ids = set(persistence.get_existing_perf_ids())
+            except Exception:
+                existing_ids = set()
+            with os.fdopen(tmpfd, "w", encoding="utf-8") as fp:
+                for vod in vod_list:
+                    vod.filename = "%s %s %s.mp4" % (
+                        vod.start_time.strftime("%Y%m%d"),
+                        vod.title.strip(),
+                        vod.subtitle.strip(),
+                    )
+                    if vod.id in existing_ids:
+                        print("#", vod.id, conf.filepath(vod), file=fp)
+                    else:
+                        print(vod.id, conf.filepath(vod), file=fp)
+            sys.stderr.write(
+                "Launching text editor for '%s'\n" % tmpfile
+                + "Program will resume once you save the file and exit the text editor...\n"
+            )
+            edit.launch_editor(tmpfile, blocking=True, raise_=True)
+            id2vod = {vod.id: vod for vod in vod_list}
+            vod_list = []
+            seen = set()
+            with open(tmpfile, encoding="utf-8") as fp:
+                for line in fp:
+                    # Strip BOM, which Notepad insists on inserting.
+                    line = line.strip().lstrip("\uFEFF")
+                    if line.startswith("#"):
+                        continue
+                    m = re.match(r"^(?P<id>\w+)\s+(?P<path>.*)$", line)
+                    if not m:
+                        raise ValueError("malformed line: %s" % repr(line))
+                    id = m.group("id")
+                    if id in seen:
+                        raise ValueError("duplicate VOD ID: %s" % id)
+                    if id not in id2vod:
+                        raise ValueError("VOD ID not found: %s" % id)
+                    filepath = m.group("path")
+                    if os.path.isabs(filepath):
+                        raise ValueError("absolute path not allowed: %s" % filepath)
+                    if not filepath.endswith(".mp4"):
+                        raise ValueError("extension is not .mp4: %s" % filepath)
+                    filepath = utils.sanitize_filepath(filepath)
+                    vod = id2vod[id]
+                    vod.filepath = filepath
+                    vod_list.append(vod)
+                    seen.add(id)
+            sys.stderr.write("Resolving VOD URLs...\n")
+            koudai.resolve_perf_vods(
+                vod_list, show_progress=True, show_progress_threshold=5
+            )
+        else:
+            raise ValueError("unrecognized mode %s" % repr(mode))
 
         targets = []
         a2_targets = []
@@ -198,10 +287,11 @@ def main():
         a2_unfinished_targets = []
         m3u8_unfinished_targets = []
         existing_filepaths = set()
-        for vod in reversed(list(vod_list)):
-            if vod.name in conf.names:
+        for vod in vod_list:
+            if (mode == "std" and vod.name in conf.names) or mode == "perf":
                 url = vod.vod_url
-                base, src_ext = os.path.splitext(conf.filepath(vod))
+                src_ext = utils.extension_from_url(vod.vod_url, dot=True)
+                base, _ = os.path.splitext(conf.filepath(vod))
 
                 # If source extension is .m3u8, use .mp4 as output
                 # extension; otherwise, use the source extension as the
@@ -240,16 +330,14 @@ def main():
             else:
                 print("%s\t%s" % (url, filepath))
 
-        if not args.dry and conf.named_subdirs:
+        # Make subdirectories.
+        if not args.dry:
             subdirs = set(
                 os.path.dirname(filepath)
                 for url, filepath in a2_unfinished_targets + m3u8_unfinished_targets
             )
             for subdir in subdirs:
-                try:
-                    os.mkdir(os.path.join(conf.directory, subdir))
-                except FileExistsError:
-                    pass
+                os.makedirs(os.path.join(conf.directory, subdir), exist_ok=True)
 
         # Report download sizes.
         if a2_unfinished_targets:
@@ -276,6 +364,9 @@ def main():
 
         if args.dry:
             sys.exit(0)
+
+        if mode == "perf":
+            persistence.insert_perf_ids([vod.id for vod in vod_list])
 
         exit_status = 0
 
