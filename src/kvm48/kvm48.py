@@ -9,7 +9,18 @@ import time
 
 import arrow
 
-from . import aria2, caterpillar, config, edit, koudai, peek, persistence, update, utils
+from . import (
+    aria2,
+    caterpillar,
+    config,
+    edit,
+    koudai,
+    lock,
+    peek,
+    persistence,
+    update,
+    utils,
+)
 from .config import DEFAULT_CONFIG_FILE
 from .version import __version__
 
@@ -188,6 +199,8 @@ def main():
 
         if conf.update_checks:
             update.check_update()
+
+        lock.lock_to_one_instance()
 
         if mode == "std":
             sys.stderr.write(

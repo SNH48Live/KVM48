@@ -32,6 +32,14 @@ setuptools.setup(
     keywords="48 snh48 koudai48 pocket48",
     package_dir={"": "src"},
     packages=["kvm48"],
-    install_requires=["PyYAML", "arrow", "attrdict", "distlib", "requests", "xdgappdirs"],
+    install_requires=[
+        "PyYAML",
+        "arrow",
+        "attrdict",
+        "distlib",
+        "psutil",
+        "requests",
+        "xdgappdirs",
+    ],
     entry_points={"console_scripts": ["kvm48=kvm48.kvm48:main"]},
 )
