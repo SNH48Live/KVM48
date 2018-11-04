@@ -6,7 +6,7 @@ FROM python:$PYTHON_VERSION-slim-stretch
 COPY . /src
 
 RUN apt-get -yqq update && \
-    apt-get install -yq --no-install-recommends aria2 wget xz-utils && \
+    apt-get install -yq --no-install-recommends aria2 build-essential wget xz-utils && \
     pip install --pre caterpillar-hls && \
     pip install /src && \
     kvm48 --version
