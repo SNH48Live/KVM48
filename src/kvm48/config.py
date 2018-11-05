@@ -85,6 +85,35 @@ naming:
 # New in v0.3.
 # named_subdirs: off
 
+# Editor to use when a text editor is needed (e.g. in perf mode). Either
+# a command name or an absolute path. If not provided, OS-dependent
+# fallbacks will be used.
+#
+# Options required by the editor command can be further specified in
+# editor_opts, which is a sequence.
+#
+# Note that the editor must be blocking, i.e., only returns control when
+# the file is saved and the editor is explicitly closed.
+#
+# *nix example:
+#
+#   editor: vim
+#
+# Windows example:
+#
+#   editor: notepad++
+#   editor_opts: ['-multiInst', '-notabbar', '-nosession']
+#
+# Note: If Notepad++ is installed via Chocolatey, the notepad++
+# executable in Chocolatey's bin is actually a non-blocking wrapper and
+# not suitable as KVM48's editor. Specify the actual path of
+# notepad++.exe instead, e.g., C:\\Program Files\\Notepad++\\notepad++.
+#
+# New in v0.5.
+#
+# editor:
+# editor_opts:
+
 # Whether to allow daily update checks for KVM48. Default is on.
 # update_checks: on
 
@@ -122,6 +151,8 @@ class Config(object):
         self._directory = None  # type: str
         self.naming = DEFAULT_NAMING_PATTERN  # type: str
         self._named_subdirs = False  # type: bool
+        self.editor = None  # type: str
+        self.editor_opts = None  # type: List[str]
         self.update_checks = True  # type: bool
         self._perf = dict()  # type: Dict[str, Any]
         self._perf_group_id = 0  # type: int
@@ -173,6 +204,24 @@ class Config(object):
         self._named_subdirs = obj.get("named_subdirs", False)
         if not isinstance(self._named_subdirs, bool):
             raise ConfigError("invalid named_subdirs; named_subdirs must be a boolean")
+
+        self.editor = obj.get("editor")
+        if not self.editor:
+            self.editor = None
+        else:
+            if not isinstance(self.editor, str):
+                raise ConfigError("invalid editor; editor must be a string")
+
+        self.editor_opts = obj.get("editor_opts")
+        if not self.editor_opts:
+            self.editor_opts = None
+        else:
+            if not isinstance(self.editor_opts, list) or any(
+                not isinstance(opt, str) for opt in self.editor_opts
+            ):
+                raise ConfigError(
+                    "invalid editor_opts; editor_opts must be a sequence of strings"
+                )
 
         self.update_checks = obj.get("update_checks", True)
         if not isinstance(self.update_checks, bool):

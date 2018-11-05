@@ -258,7 +258,13 @@ def main():
                 "Launching text editor for '%s'\n" % tmpfile
                 + "Program will resume once you save the file and exit the text editor...\n"
             )
-            edit.launch_editor(tmpfile, blocking=True, raise_=True)
+            edit.launch_editor(
+                tmpfile,
+                editor=conf.editor,
+                opts=conf.editor_opts,
+                blocking=True,
+                raise_=True,
+            )
             id2vod = {vod.id: vod for vod in vod_list}
             vod_list = []
             seen = set()
