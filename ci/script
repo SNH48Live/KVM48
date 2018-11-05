@@ -21,14 +21,25 @@ span: 3
 directory: /data
 named_subdirs: true
 update_checks: off
+editor: cat
+perf:
+  span: 7
 EOF
 
-sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml
+image="snh48live/kvm48:master-python-$PYTHON_VERSION"
+
+sudo docker run -it --rm -v "$PWD/data:/data" "$image" --debug --config data/kvm48-config.yml
 sudo rm -f data/*/*.mp4
 
 # Test a known date range with both mp4 and m3u8 URLs to download.
-sudo docker run -it --rm -v "$PWD/data:/data" "snh48live/kvm48:master-python-$PYTHON_VERSION" --debug --config data/kvm48-config.yml --from 2018-10-25 --to 2018-10-27
+sudo docker run -it --rm -v "$PWD/data:/data" "$image" --debug --config data/kvm48-config.yml --from 2018-10-25 --to 2018-10-27
 sudo rm -f data/*/*.mp4
+
+sudo docker run -it --rm -v "$PWD/data:/data" "$image" --debug --config data/kvm48-config.yml --mode perf --dry
+
+# 2018-06-09 is a day with a short VOD: 其它/20180609 “砥砺前行” SNH48 GROUP 第五届偶像年度人气总决选启动仪式 第五届总选启动仪式.mp4
+sudo docker run -it --rm -v "$PWD/data:/data" "$image" --debug --config data/kvm48-config.yml --mode perf --from 2018-06-09 --to 2018-06-09
 
 rm data/kvm48-config.yml
 ls -lh data
+sudo rm -rf data
