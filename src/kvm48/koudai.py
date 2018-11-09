@@ -216,7 +216,7 @@ def list_perf_vods(
             if v.startTime < from_ms:
                 continue
 
-            m = re.search(r"(《(?P<name>.*)》)?", v.title + v.subTitle)
+            m = re.search(r"(《(?P<name>.*?)》)?", v.title + v.subTitle)
             yield attrdict.AttrDict(
                 {
                     "id": v.liveId,
