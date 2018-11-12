@@ -114,6 +114,7 @@ def main():
 
         conf = config.Config()
         conf.dump_config_template()
+        conf.dump_filter_template()
 
         parser = argparse.ArgumentParser(
             prog="kvm48",
@@ -154,6 +155,11 @@ def main():
             help="print URL & filename combos but do not download",
         )
         newarg("--config", help="use this config file instead of the default")
+        newarg(
+            "--filter",
+            help="use this filter source file instead of the default "
+            "(see perf mode documentation)",
+        )
         newarg(
             "--edit",
             action="store_true",
@@ -221,6 +227,7 @@ def main():
                 )
             )
         elif mode == "perf":
+            conf.load_filter("perf", args.filter)
             sys.stderr.write(
                 "Searching for VODs in the date range %s to %s for %s\n"
                 % (from_.date(), to_.date(), conf.group_name)
@@ -250,10 +257,16 @@ def main():
                         vod.title.strip(),
                         vod.subtitle.strip(),
                     )
-                    if vod.id in existing_ids:
-                        print("#", vod.id, conf.filepath(vod), file=fp)
+                    vod.filepath = conf.filepath(vod)
+                    filtered_filepath = conf.filter(vod.filepath)
+                    if filtered_filepath is None:
+                        print("#x", vod.id, vod.filepath, file=fp)
                     else:
-                        print(vod.id, conf.filepath(vod), file=fp)
+                        vod.filepath = filtered_filepath
+                        if vod.id in existing_ids:
+                            print("#-", vod.id, vod.filepath, file=fp)
+                        else:
+                            print(vod.id, vod.filepath, file=fp)
             sys.stderr.write(
                 "Launching text editor for '%s'\n" % tmpfile
                 + "Program will resume once you save the file and exit the text editor...\n"

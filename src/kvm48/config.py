@@ -1,6 +1,7 @@
+import importlib
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 import arrow
 import attrdict
@@ -17,6 +18,7 @@ if os.path.exists(os.path.expanduser("~/.config/kvm48/config.yml")):
 else:
     DEFAULT_CONFIG_DIR = USER_CONFIG_DIR
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_DIR, "config.yml")
+DEFAULT_FILTER_DIR = os.path.join(DEFAULT_CONFIG_DIR, "filters")
 DEFAULT_NAMING_PATTERN = "%(date_c)s %(name)s口袋%(type)s %(title)s.%(ext)s"
 CONFIG_TEMPLATE = """\
 # ID of group to monitor, if all members you monitor are in a single
@@ -136,6 +138,51 @@ perf:
   # recommended paths and can be manually overridden.
   # named_subdirs:
 """
+FILTER_TEMPLATE = """\
+# This module is imported to preprocess and exclude filenames/filepaths
+# of VODS in perf mode.
+#
+# A single function named `filter` with the signature
+#
+#   (str,) -> Optional[str]
+#
+# is expected. The default filename/filepath derived from the title and
+# subtitle of a VOD is passed to the `filter` function. If the return
+# value is a string, it is used as the filename/filepath instead. If the
+# return value is `None`, the VOD is considered excluded and
+# automatically commented out (it can still be restored during
+# interactive editing).
+#
+# An example is given below.
+#
+#
+#import re
+#
+#RE = re.compile
+#IGNORES = [RE(r"生日会")]
+#SUBS = [
+#    # (pattern, repl)
+#    (RE(r"(S|N|H|X)II"), r"\1Ⅱ"),
+#    (RE(r"Team Ft", re.I), r"Team Ft"),
+#    (RE(r"Team", re.I), r"Team"),
+#    (RE(r"\s+"), r" "),
+#]
+#
+#def filter(path):
+#    for pattern in IGNORES:
+#        if pattern.search(path):
+#            return None
+#    for pattern, repl in SUBS:
+#        path = pattern.sub(repl, path)
+#    return path
+"""
+
+
+def default_filter_file(mode: str) -> str:
+    return os.path.join(DEFAULT_FILTER_DIR, "%s.py" % mode)
+
+
+DEFAULT_FILTER = lambda path, **kwargs: path
 
 
 class ConfigError(Exception):
@@ -159,6 +206,9 @@ class Config(object):
         self._perf_span = 1  # type: int
         self._perf_directory = None  # type: str
         self._perf_named_subdirs = False  # type: bool
+
+        self._std_filter = DEFAULT_FILTER  # type: Callable
+        self._perf_filter = DEFAULT_FILTER  # type: Callable
 
     def load(self, config_file: str = None) -> None:
         if not config_file:
@@ -255,6 +305,25 @@ class Config(object):
         if not isinstance(self._perf_named_subdirs, bool):
             raise ConfigError("invalid perf.named_subdirs; must be a boolean")
 
+    # If `file` is None, the filter is loaded from the default location.
+    # If `file` is the empty string, the filter is reset to identity.
+    # Otherwise, the filter is loaded from `file`.
+    def load_filter(self, mode: str, file: Optional[str]) -> None:
+        if mode not in ["std", "perf"]:
+            raise ValueError("unrecognized mode %s" % repr(mode))
+        if file == "":
+            return DEFAULT_FILTER
+        if file is None:
+            file = default_filter_file(mode)
+        try:
+            spec = importlib.util.spec_from_file_location("user_filter_%s" % mode, file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            filter = module.filter
+        except Exception:
+            filter = DEFAULT_FILTER
+        setattr(self, "_%s_filter" % mode, filter)
+
     @staticmethod
     def dump_config_template():
         if not os.path.isdir(DEFAULT_CONFIG_DIR):
@@ -270,6 +339,17 @@ class Config(object):
             "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
             + "Please edit the file to suit your needs before using kvm48.\n\n"
         )
+
+    @staticmethod
+    def dump_filter_template():
+        if not os.path.isdir(DEFAULT_FILTER_DIR):
+            os.makedirs(DEFAULT_FILTER_DIR, mode=0o700)
+        filter_file = default_filter_file("perf")
+        if os.path.isfile(filter_file) and os.stat(filter_file).st_size > 0:
+            return
+        with open(filter_file, "w", encoding="utf-8") as fp:
+            fp.write(FILTER_TEMPLATE)
+        sys.stderr.write("Filter template written to %s.\n" % filter_file)
 
     @property
     def group_id(self) -> int:
@@ -334,6 +414,18 @@ class Config(object):
             return sanitize_filename(vod.name or "其它") + os.sep + self.filename(vod)
         else:
             return self.filename(vod)
+
+    def filter(self, path: str) -> Optional[str]:
+        if self.mode == "std":
+            filter_func = self._std_filter
+        elif self.mode == "perf":
+            filter_func = self._perf_filter
+        else:
+            raise ConfigError("unrecognized mode %s" % repr(self.mode))
+        try:
+            return filter_func(path)
+        except Exception:
+            return path
 
     def test_naming_pattern(self) -> None:
         try:
