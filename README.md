@@ -23,6 +23,7 @@ KVM48 is supported on macOS, Linux, other Unix-like systems, and Windows 10.
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Perf mode](#perf-mode)
 - [Invocation examples](#invocation-examples)
 - [Privacy](#privacy)
 - [Roadmap](#roadmap)
@@ -61,6 +62,9 @@ the YAML configuration file
 
 or through a different configuration file specified with the --config
 option.
+
+KVM48 also offers a perf mode for downloading performance VODs. See
+documentation for details: https://github.com/SNH48Live/KVM48#perf-mode
 
 The date range is determined as follows. All date and time are processed
 in China Standard Time (UTC+08:00). --from and --to are specified in the
@@ -192,10 +196,62 @@ naming:
 # go. Default is off.
 #
 # New in v0.3.
-# named_subdirs: off
+#named_subdirs: off
+
+# Editor to use when a text editor is needed (e.g. in perf mode). Either
+# a command name or an absolute path. If not provided, OS-dependent
+# fallbacks will be used.
+#
+# Options required by the editor command can be further specified in
+# editor_opts, which is a sequence.
+#
+# Note that the editor must be blocking, i.e., only returns control when
+# the file is saved and the editor is explicitly closed.
+#
+# *nix example:
+#
+#   editor: vim
+#
+# Windows example:
+#
+#   editor: notepad++
+#   editor_opts: ['-multiInst', '-notabbar', '-nosession']
+#
+# Note: If Notepad++ is installed via Chocolatey, the notepad++
+# executable in Chocolatey's bin is actually a non-blocking wrapper and
+# not suitable as KVM48's editor. Specify the actual path of
+# notepad++.exe instead, e.g., C:\\Program Files\\Notepad++\\notepad++.
+#
+# New in v1.0.
+#
+#editor:
+#editor_opts:
 
 # Whether to allow daily update checks for KVM48. Default is on.
 # update_checks: on
+
+# Perf mode specific settings (--mode perf).
+#
+# New in v1.0.
+perf:
+  # Perf mode verrides (defaults to corresponding global settings).
+
+  #group_id:
+
+  #span:
+
+  #directory:
+
+  # In perf mode, if named_subdirs is on, subdirectories are named after
+  # titles of stages, e.g., 美丽48区. Note however that since in perf
+  # mode users are prompted to review the download list and manually
+  # edit the paths as they see fit, this setting only affects the
+  # recommended paths and can be manually overridden.
+  #named_subdirs:
+
+  # Whether to show instructions text in perf mode interactively editor.
+  # Default is on.
+  #instructions: off
 ```
 
 Here is a sample configuration for downloading the VODs of Team SⅡ members daily:
@@ -238,6 +294,18 @@ directory:
 naming:
 named_subdirs: on
 ```
+
+## Perf mode
+
+Starting from v1.0, KVM48 offers a perf mode to download performance VODs in addition to individual livestream VODs. This mode is activated by `-m perf`, `--mode perf`, or the shortcut `-p`, `--perf`.
+
+The perf mode re-uses many of the global config options — `group_id`, `span`, `directory`, `named_subdirs` — but permits mode-specific overrides under the `perf` section. Check the config template above for details.
+
+Since auto-generated filenames based on API-supplied VOD metadata are messy and inconsistent, and it is hard for KVM48 to provide the customizability of what to download and what not to via command line options, the perf mode relies on interactively opening a control file in a text editor (configurable) for the user to edit. The user may edit download paths, or ignore VODs by deleting or commenting out corresponding lines. KVM48 also remembers which VODs have been downloaded before and automatically comments out those VODs, which can be un-commented. Check the instructions text in the control file for details.
+
+Semi-automatic filtering and download path transformation is still possible via a user-supplied filter script. The default location of the filter script is `filters/perf.py` relative to the default config file. For instance, if the default config file is `~/.config/kvm48/config.yml`, then the default filter script loaded is `~/.config/kvm48/filters/perf.py`; if the default config file is `~\AppData\Local\org.snh48live\kvm48\config.yml`, then the default filter script loaded is `~\AppData\Local\org.snh48live\kvm48\filters\perf.py`. Naturally, an alternative filter script can be specified via the `--filter` command line option. Check the auto-generated default filter script for how it works; there is also a production-ready example at <https://github.com/SNH48Live/KVM48/wiki/Perf-mode-filter>.
+
+An example is provided in the "Invocation examples" section.
 
 ## Invocation examples
 
@@ -357,6 +425,56 @@ We assume the sample configuration above (in particular, `span` is 2) in the fol
   https://mp4.48.cn/live/a74b3083-8158-4dfb-ae28-f25a4957b1b6.mp4	钱蓓婷/20181021 钱蓓婷口袋直播 你倒是进来看看啊 (1).mp4	*
   8 direct downloads, total size: 2,302,573,126 bytes
   No new M3U8 downloads.
+  ```
+
+- Perf mode with `span` set to 7, and using [the example filter script](https://github.com/SNH48Live/KVM48/wiki/Perf-mode-filter/a8bfc6619e377c8d132921b015a942606cbf50d4):
+
+  ```console
+  $ kvm48 -p  # or kvm48 -m perf
+  Searching for VODs in the date range 2018-11-17 to 2018-11-23 for SNH48
+  美丽48区/20181117 《美丽48区》剧场公演 张语格生日主题公演.mp4
+  命运的X号/20181117 《命运的X号》公演 TEAM X 剧场公演.mp4
+  第48区/20181118 《第48区》千秋乐 TEAM SII  剧场公演.mp4
+  头号新闻/20181118 《头号新闻》公演 TEAM HII 剧场公演.mp4
+  Launching text editor for '/var/folders/sk/v_4rk6391f58cvmc4h6fp5fr0000gn/T/kvm48-yegdwvb_.txt'
+  Program will resume once you save the file and exit the text editor...
+
+  |-------------------------------------------------------------------------
+  | The following is content you see in your text editor.
+  |-------------------------------------------------------------------------
+  | # Each line contains a VOD ID and the path to download to. You may edit
+  | # the path, but please don't touch the ID. You may ignore a VOD and
+  | # hence drop it from the download queue by adding a pound (#) to the
+  | # beginning of the line, or removing the line entirely. Conversely, if
+  | # there are auto-ignored items (e.g. ones you've previously downloaded),
+  | # you can remove the pound-initiated prefix to re-add it to the download
+  | # queue.
+  | #
+  | # Paths may be auto-filtered (transformed or ignored) with a
+  | # user-supplied script. Please refer to the documentation [1] for
+  | # details; a production-ready example is available at [2].
+  | #
+  | # The instructions text you're reading can be suppressed by setting
+  | # perf.instructions to off in your config file.
+  | #
+  | # [1] https://github.com/SNH48Live/KVM48#perf-mode
+  | # [2] https://github.com/SNH48Live/KVM48/wiki/Perf-mode-filter
+  |
+  |
+  | 5bd7f40f0cf27e3208982888 美丽48区/20181117 Team SⅡ 《美丽48区》 张语格生日主题公演.mp4
+  | 5be289a40cf27e32089828c1 命运的X号/20181117 Team X 《命运的X号》.mp4
+  | 5be289220cf27e32089828c0 第48区/20181118 Team SⅡ 《第48区》千秋乐.mp4
+  | 5be288c50cf27e32089828bf 头号新闻/20181118 Team HⅡ 《头号新闻》.mp4
+  |-------------------------------------------------------------------------
+
+  Resolving VOD URLs...
+  http://ts.snh48.com/record/2018-11-17/gaoqing/9999/2018-11-17-13:37:59_2018-11-17-17:44:41.m3u8?beginTime=20181117140000&endTime=20181117174300	美丽48区/20181117 Team SⅡ 《美丽48区》 张语格生日主题公演.mp4	*
+  http://ts.snh48.com/record/2018-11-17/gaoqing/9999/2018-11-17-17:54:15_2018-11-17-21:43:30.m3u8?beginTime=20181117190000&endTime=20181117214300	命运的X号/20181117 Team X 《命运的X号》.mp4	*
+  http://ts.snh48.com/record/2018-11-18/gaoqing/9999/2018-11-18-13:40:40_2018-11-18-17:16:33.m3u8?beginTime=20181118140000&endTime=20181118171500	第48区/20181118 Team SⅡ 《第48区》千秋乐.mp4	*
+  http://ts.snh48.com/record/2018-11-18/gaoqing/9999/2018-11-18-18:37:57_2018-11-18-21:29:16.m3u8?beginTime=20181118190000&endTime=20181118212700	头号新闻/20181118 Team HⅡ 《头号新闻》.mp4	*
+  No new direct downloads.
+  4 M3U8 VODs to download, total size unknown
+  ...
   ```
 
 ## Privacy

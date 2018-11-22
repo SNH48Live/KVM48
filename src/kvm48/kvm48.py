@@ -38,6 +38,9 @@ the YAML configuration file
 or through a different configuration file specified with the --config
 option.
 
+KVM48 also offers a perf mode for downloading performance VODs. See
+documentation for details: https://github.com/SNH48Live/KVM48#perf-mode
+
 The date range is determined as follows. All date and time are processed
 in China Standard Time (UTC+08:00). --from and --to are specified in the
 YYYY-MM-DD or MM-DD format.
