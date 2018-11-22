@@ -85,7 +85,7 @@ naming:
 # go. Default is off.
 #
 # New in v0.3.
-# named_subdirs: off
+#named_subdirs: off
 
 # Editor to use when a text editor is needed (e.g. in perf mode). Either
 # a command name or an absolute path. If not provided, OS-dependent
@@ -113,8 +113,8 @@ naming:
 #
 # New in v0.5.
 #
-# editor:
-# editor_opts:
+#editor:
+#editor_opts:
 
 # Whether to allow daily update checks for KVM48. Default is on.
 # update_checks: on
@@ -125,22 +125,22 @@ naming:
 perf:
   # Perf mode verrides (defaults to corresponding global settings).
 
-  # group_id:
+  #group_id:
 
-  # span:
+  #span:
 
-  # directory:
+  #directory:
 
   # In perf mode, if named_subdirs is on, subdirectories are named after
   # titles of stages, e.g., 美丽48区. Note however that since in perf
   # mode users are prompted to review the download list and manually
   # edit the paths as they see fit, this setting only affects the
   # recommended paths and can be manually overridden.
-  # named_subdirs:
+  #named_subdirs:
 
   # Whether to show instructions text in perf mode interactively editor.
   # Default is on.
-  # instructions: off
+  #instructions: off
 """
 FILTER_TEMPLATE = """\
 # This module is imported to preprocess and exclude filenames/filepaths
