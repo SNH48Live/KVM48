@@ -7,7 +7,7 @@ from distlib.version import NormalizedVersion, UnsupportedVersionError
 
 
 # v1.0b1: --exist-ok
-MINIMUM_CATERPILLAR_VERSION = "1.0b1"
+MINIMUM_CATERPILLAR_VERSION = "1.0"
 
 
 # Transform my cavalier version numbers for PEP-440 compilance.
