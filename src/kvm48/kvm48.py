@@ -289,7 +289,7 @@ def main():
                 for line in fp:
                     # Strip BOM, which Notepad insists on inserting.
                     line = line.strip().lstrip("\uFEFF")
-                    if line.startswith("#"):
+                    if not line or line.startswith("#"):
                         continue
                     m = re.match(r"^(?P<id>\w+)\s+(?P<path>.*)$", line)
                     if not m:
