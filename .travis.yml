@@ -1,16 +1,16 @@
 language: shell
 matrix:
   include:
-    - name: "Linux (Docker) Python 3.6"
-      os: linux
-      sudo: required
-      services: docker
-      env: PYTHON_VERSION=3.6
-    - name: "Linux (Docker) Python 3.7"
-      os: linux
-      sudo: required
-      services: docker
-      env: PYTHON_VERSION=3.7
+    # - name: "Linux (Docker) Python 3.6"
+    #   os: linux
+    #   sudo: required
+    #   services: docker
+    #   env: PYTHON_VERSION=3.6
+    # - name: "Linux (Docker) Python 3.7"
+    #   os: linux
+    #   sudo: required
+    #   services: docker
+    #   env: PYTHON_VERSION=3.7
     - name: "Windows Python latest"
       os: windows
 before_install:
