@@ -137,6 +137,10 @@ perf:
   # edit the paths as they see fit, this setting only affects the
   # recommended paths and can be manually overridden.
   # named_subdirs:
+
+  # Whether to show instructions text in perf mode interactively editor.
+  # Default is on.
+  # instructions: off
 """
 FILTER_TEMPLATE = """\
 # This module is imported to preprocess and exclude filenames/filepaths
@@ -206,6 +210,7 @@ class Config(object):
         self._perf_span = 1  # type: int
         self._perf_directory = None  # type: str
         self._perf_named_subdirs = False  # type: bool
+        self.perf_instructions = True  # type: bool
 
         self._std_filter = DEFAULT_FILTER  # type: Callable
         self._perf_filter = DEFAULT_FILTER  # type: Callable
@@ -304,6 +309,10 @@ class Config(object):
         self._perf_named_subdirs = self._perf.get("named_subdirs", self._named_subdirs)
         if not isinstance(self._perf_named_subdirs, bool):
             raise ConfigError("invalid perf.named_subdirs; must be a boolean")
+
+        self.perf_instructions = self._perf.get("instructions", True)
+        if not isinstance(self.perf_instructions, bool):
+            raise ConfigError("invalid perf.instructions; must be a boolean")
 
     # If `file` is None, the filter is loaded from the default location.
     # If `file` is the empty string, the filter is reset to identity.

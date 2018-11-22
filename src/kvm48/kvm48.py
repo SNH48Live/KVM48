@@ -82,6 +82,27 @@ postprocessing at the user's discretion.
     % DEFAULT_CONFIG_FILE
 )
 
+PERF_MODE_INSTRUCTIONS = """\
+# Each line contains a VOD ID and the path to download to. You may edit
+# the path, but please don't touch the ID. You may ignore a VOD and
+# hence drop it from the download queue by adding a pound (#) to the
+# beginning of the line, or removing the line entirely. Conversely, if
+# there are auto-ignored items (e.g. ones you've previously downloaded),
+# you can remove the pound-initiated prefix to re-add it to the download
+# queue.
+#
+# Paths may be auto-filtered (transformed or ignored) with a
+# user-supplied script. Please refer to the documentation [1] for
+# details; a production-ready example is available at [2].
+#
+# The instructions text you're reading can be suppressed by setting
+# perf.instructions to off in your config file.
+#
+# [1] https://github.com/SNH48Live/KVM48#perf-mode
+# [2] https://github.com/SNH48Live/KVM48/wiki/Perf-mode-filter
+
+"""
+
 
 def parse_date(s: str) -> arrow.Arrow:
     def date(year: int, month: int, day: int) -> arrow.Arrow:
@@ -255,6 +276,8 @@ def main():
             except Exception:
                 existing_ids = set()
             with os.fdopen(tmpfd, "w", encoding="utf-8") as fp:
+                if conf.perf_instructions:
+                    fp.write(PERF_MODE_INSTRUCTIONS)
                 for vod in vod_list:
                     vod.filename = "%s %s %s.mp4" % (
                         vod.start_time.strftime("%Y%m%d"),
