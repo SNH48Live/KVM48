@@ -111,7 +111,7 @@ naming:
 # not suitable as KVM48's editor. Specify the actual path of
 # notepad++.exe instead, e.g., C:\\Program Files\\Notepad++\\notepad++.
 #
-# New in v0.5.
+# New in v1.0.
 #
 #editor:
 #editor_opts:
@@ -121,7 +121,7 @@ naming:
 
 # Perf mode specific settings (--mode perf).
 #
-# New in v0.5.
+# New in v1.0.
 perf:
   # Perf mode verrides (defaults to corresponding global settings).
 
