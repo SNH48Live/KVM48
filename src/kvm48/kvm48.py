@@ -401,9 +401,6 @@ def main():
         if args.dry:
             sys.exit(0)
 
-        if mode == "perf":
-            persistence.insert_perf_ids([vod.id for vod in vod_list])
-
         exit_status = 0
 
         # Write the caterpillar manifest first so that we don't need to
@@ -490,6 +487,9 @@ def main():
                         "in case you want to retry manually.\n\n" % m3u8_manifest
                     )
                     exit_status = 1
+
+        if mode == "perf":
+            persistence.insert_perf_ids([vod.id for vod in vod_list])
 
         if exit_status == 0:
             sys.stderr.write("All is well.\n")
