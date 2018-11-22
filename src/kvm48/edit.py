@@ -11,6 +11,12 @@ def nt_popen(args: List[str]):
     subprocess.Popen(args, creationflags=0x00000008 | 0x00000200)
 
 
+def call_and_warn_return_code(args: List[str]):
+    code = subprocess.call(args)
+    if code != 0:
+        sys.stderr.write("[WARNING] %s exited with code %d\n" % (args[0], code))
+
+
 def launch_editor(
     file: str,
     *,
@@ -26,14 +32,14 @@ def launch_editor(
             if os.name == "nt" and not blocking:
                 nt_popen([editor, *opts, file])
             else:
-                subprocess.call([editor, *opts, file])
+                call_and_warn_return_code([editor, *opts, file])
             return
         except FileNotFoundError:
             sys.stderr.write("[WARNING] cannot find editor '%s'" % editor)
 
     if os.name == "nt":
         if blocking:
-            subprocess.call(["notepad", file])
+            call_and_warn_return_code(["notepad", file])
         else:
             try:
                 os.startfile(file, "edit")
@@ -46,13 +52,13 @@ def launch_editor(
     editor = os.getenv("VISUAL") or os.getenv("EDITOR")
     if editor:
         try:
-            subprocess.call([editor, file])
+            call_and_warn_return_code([editor, file])
             return
         except FileNotFoundError:
             pass
     for fallback_editor in ("nano", "vim", "vi"):
         try:
-            subprocess.call([fallback_editor, file])
+            call_and_warn_return_code([fallback_editor, file])
             return
         except FileNotFoundError:
             pass
