@@ -47,8 +47,9 @@ pip install KVM48
 
 ```console
 $ kvm48 --help
-usage: kvm48 [-h] [-f FROM] [-t TO] [-s SPAN] [-n] [--config CONFIG] [--edit]
-             [--version] [--debug]
+usage: kvm48 [-h] [-m {std,perf}] [-p] [-f FROM] [-t TO] [-s SPAN] [-n]
+             [--config CONFIG] [--filter FILTER] [--edit] [--version]
+             [--debug]
 
 KVM48, the Koudai48 VOD Manager.
 
@@ -104,11 +105,18 @@ postprocessing at the user's discretion.
 
 optional arguments:
   -h, --help            show this help message and exit
+  -m {std,perf}, --mode {std,perf}
+                        operation mode (std or perf): std is the standard mode
+                        for downloading individual members' VODs; perf is the
+                        mode for downloading performance VODs
+  -p, --perf            short for '--mode perf'
   -f FROM, --from FROM  starting day of date range
   -t TO, --to TO        ending day of date range
   -s SPAN, --span SPAN  number of days in date range
   -n, --dry             print URL & filename combos but do not download
   --config CONFIG       use this config file instead of the default
+  --filter FILTER       use this filter source file instead of the default
+                        (see perf mode documentation)
   --edit                open text editor to edit the config file
   --version             show program's version number and exit
   --debug

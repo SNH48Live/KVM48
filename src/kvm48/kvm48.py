@@ -131,6 +131,7 @@ def main():
             "std is the standard mode for downloading individual members' VODs; "
             "perf is the mode for downloading performance VODs",
         )
+        newarg("-p", "--perf", action="store_true", help="short for '--mode perf'")
         newarg(
             "-f",
             "--from",
@@ -172,11 +173,14 @@ def main():
         mode = args.mode
         debug = args.debug
 
+        if args.perf:
+            mode = "perf"
+
         if args.edit:
             edit.launch_editor(args.config or config.DEFAULT_CONFIG_FILE)
             sys.exit(0)
 
-        conf.mode = args.mode
+        conf.mode = mode
         conf.load(args.config)
 
         if args.span is not None and args.span <= 0:
