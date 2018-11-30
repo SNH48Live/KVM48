@@ -166,7 +166,7 @@ FILTER_TEMPLATE = """\
 #IGNORES = [RE(r"生日会")]
 #SUBS = [
 #    # (pattern, repl)
-#    (RE(r"(S|N|H|X)II"), r"\1Ⅱ"),
+#    (RE(r"(S|N|H|X)II"), r"\\1Ⅱ"),
 #    (RE(r"Team Ft", re.I), r"Team Ft"),
 #    (RE(r"Team", re.I), r"Team"),
 #    (RE(r"\s+"), r" "),
