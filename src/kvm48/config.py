@@ -7,7 +7,7 @@ import arrow
 import attrdict
 import yaml
 
-from .dirs import USER_CONFIG_DIR
+from .dirs import USER_CONFIG_DIR, V10LEGACY_USER_CONFIG_DIR
 from .koudai import VOD
 from .utils import extension_from_url, sanitize_filename
 
@@ -348,6 +348,12 @@ class Config(object):
             "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
             + "Please edit the file to suit your needs before using kvm48.\n\n"
         )
+        if V10LEGACY_USER_CONFIG_DIR is not None:
+            sys.stderr.write(
+                "If you had a config file and just upgraded to v1.1, "
+                "note that the config location has changed, and please "
+                "move %s to %s.\n\n" % (V10LEGACY_USER_CONFIG_DIR, DEFAULT_CONFIG_DIR)
+            )
 
     @staticmethod
     def dump_filter_template():
