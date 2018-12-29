@@ -543,7 +543,13 @@ def main():
         if debug:
             raise
         else:
-            sys.exit("%s: %s" % (type(exc).__name__, str(exc)))
+            sys.stderr.write("%s: %s\n" % (type(exc).__name__, str(exc)))
+            sys.stderr.write(
+                "[NOTICE] KVM48 halted due to an exception. If you believe this is a bug, "
+                "please read <https://github.com/SNH48Live/KVM48#reporting-bugs> "
+                "before reporting the bug, thank you.\n"
+            )
+            sys.exit(1)
     except KeyboardInterrupt:
         if debug:
             raise
