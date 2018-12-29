@@ -333,20 +333,22 @@ class Config(object):
             filter = DEFAULT_FILTER
         setattr(self, "_%s_filter" % mode, filter)
 
+    # Returns whether config template is dumped.
     @staticmethod
-    def dump_config_template():
+    def dump_config_template() -> bool:
         if not os.path.isdir(DEFAULT_CONFIG_DIR):
             os.makedirs(DEFAULT_CONFIG_DIR, mode=0o700)
         if (
             os.path.isfile(DEFAULT_CONFIG_FILE)
             and os.stat(DEFAULT_CONFIG_FILE).st_size > 0
         ):
-            return
+            return False
         with open(DEFAULT_CONFIG_FILE, "w", encoding="utf-8") as fp:
             fp.write(CONFIG_TEMPLATE)
         sys.stderr.write(
             "Configuration template written to %s.\n" % DEFAULT_CONFIG_FILE
-            + "Please edit the file to suit your needs before using kvm48.\n\n"
+            + "Please edit the file (run `kvm48 --edit`) to suit your needs before using kvm48.\n"
+            + "Documentation and example can be found at <https://github.com/SNH48Live/KVM48#configuration>.\n\n"
         )
         if V10LEGACY_USER_CONFIG_DIR is not None:
             sys.stderr.write(
@@ -354,9 +356,10 @@ class Config(object):
                 "note that the config location has changed, and please "
                 "move %s to %s.\n\n" % (V10LEGACY_USER_CONFIG_DIR, DEFAULT_CONFIG_DIR)
             )
+        return True
 
     @staticmethod
-    def dump_filter_template():
+    def dump_filter_template() -> None:
         if not os.path.isdir(DEFAULT_FILTER_DIR):
             os.makedirs(DEFAULT_FILTER_DIR, mode=0o700)
         filter_file = default_filter_file("perf")

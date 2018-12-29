@@ -254,7 +254,7 @@ perf:
   #instructions: off
 ```
 
-Here is a sample configuration for downloading the VODs of Team SⅡ members daily:
+<a id="config-sample"></a>Here is a sample configuration for downloading the VODs of Team SⅡ members daily:
 
 ```yml
 # SNH48

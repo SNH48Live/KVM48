@@ -21,7 +21,7 @@ from . import (
     update,
     utils,
 )
-from .config import DEFAULT_CONFIG_FILE
+from .config import DEFAULT_CONFIG_FILE, ConfigError
 from .version import __version__
 
 
@@ -147,7 +147,7 @@ def main():
         debug = True
 
         conf = config.Config()
-        conf.dump_config_template()
+        config_template_dumped = conf.dump_config_template()
         conf.dump_filter_template()
 
         parser = argparse.ArgumentParser(
@@ -216,6 +216,10 @@ def main():
         if args.edit:
             edit.launch_editor(args.config or config.DEFAULT_CONFIG_FILE)
             sys.exit(0)
+
+        if config_template_dumped:
+            # Onboarding; do not proceed to config loading stage.
+            sys.exit(1)
 
         conf.mode = mode
         conf.load(args.config)
@@ -539,6 +543,16 @@ def main():
             )
 
         sys.exit(exit_status)
+    except ConfigError as exc:
+        if debug:
+            raise
+        else:
+            sys.stderr.write("Configuration error: %s\n" % exc)
+            sys.stderr.write(
+                "Please run `kvm48 --edit` to fix your config file.\n"
+                "A simple example can be found at <https://github.com/SNH48Live/KVM48#config-sample>, "
+                "and the full documentation of all configuration options is right above that.\n"
+            )
     except Exception as exc:
         if debug:
             raise
