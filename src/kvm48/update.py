@@ -64,6 +64,7 @@ def pip_upgrade_command(prerelease: bool = False) -> str:
 
 def check_update_or_print_whats_new(force: bool = False) -> None:
     last_check_date, last_check_version = load_last_check_info()
+    write_last_check_info()
     if last_check_date and (last_check_version != __version__):
         # Only print what's new when the program has checked for updates
         # in the past, and the version that last checked for updates
@@ -76,7 +77,6 @@ def check_update_or_print_whats_new(force: bool = False) -> None:
 
     if not force and datetime.date.today() == last_check_date:
         return
-    write_last_check_info()
     sys.stderr.write("Checking for updates for KVM48...\n")
     try:
         r = requests.get(
