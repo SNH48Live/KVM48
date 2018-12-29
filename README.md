@@ -7,7 +7,7 @@
   <a href="https://travis-ci.org/SNH48Live/KVM48/"><img src="https://travis-ci.org/SNH48Live/KVM48.svg?branch=master" alt="build status"></a>
 </p>
 
-KVM48, the Koudai48 VOD Manager. It is capable of downloading all streaming VODs of a set of monitored members in a specified date range.
+KVM48, the Koudai48 VOD Manager. It is designed to automatically download all streaming VODs of a set of monitored members ([std mode](#invocation-examples)), or alternatively, selected [performance VODs](http://zhibo.ckg48.com/) ([perf mode](#perf-mode)), in any specified date range.
 
 Not to be confused with [KVM for kernel version 4.8](https://git.kernel.org/pub/scm/virt/kvm/kvm.git/tag/?h=kvm-4.8-3).
 
