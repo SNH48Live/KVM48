@@ -132,6 +132,16 @@ def parse_date(s: str) -> arrow.Arrow:
             return date(now.year - 1, month, day)
 
 
+def dump_environment():
+    import platform
+
+    print("Platform:", platform.platform(), file=sys.stderr)
+    print("Python version:", platform.python_version(), file=sys.stderr)
+    print("Python executable:", sys.executable, file=sys.stderr)
+    print("KVM48 version:", __version__, file=sys.stderr)
+    sys.stderr.write("\n")
+
+
 def main():
     try:
         debug = True
@@ -196,6 +206,9 @@ def main():
 
         mode = args.mode
         debug = args.debug
+
+        if args.debug:
+            dump_environment()
 
         if args.perf:
             mode = "perf"
