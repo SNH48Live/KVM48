@@ -409,6 +409,25 @@ def main():
             else:
                 print("%s\t%s" % (url, filepath))
 
+        if mode == "perf":
+            # Alert to non-1080p VODs.
+            non_1080p_vod_found = False
+            for url in new_urls:
+                if "/chaoqing/" in url:
+                    continue
+                elif "/gaoqing/" in url:
+                    quality = "720p"
+                elif "/liuchang/" in url:
+                    quality = "480p"
+                else:
+                    continue
+                non_1080p_vod_found = True
+                sys.stderr.write("[WARNING] %s is %s, not 1080p\n" % (url, quality))
+            if non_1080p_vod_found:
+                sys.stderr.write(
+                    "See <https://github.com/SNH48Live/KVM48/issues/7> for details about this issue.\n"
+                )
+
         # Make subdirectories.
         if not args.dry:
             subdirs = set(
