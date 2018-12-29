@@ -245,7 +245,7 @@ def main():
             )
 
         if conf.update_checks:
-            update.check_update()
+            update.check_update_or_print_whats_new()
 
         lock.lock_to_one_instance()
 
