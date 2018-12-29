@@ -572,6 +572,7 @@ def main():
                 "A simple example can be found at <https://github.com/SNH48Live/KVM48#config-sample>, "
                 "and the full documentation of all configuration options is right above that.\n"
             )
+            sys.exit(1)
     except Exception as exc:
         if debug:
             raise
