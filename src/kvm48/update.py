@@ -22,6 +22,8 @@ any way.
 - caterpillar (https://github.com/zmwangx/caterpillar) is now \
 automatically installed as a dependency through pip.
 
+- Improve onboarding experience.
+
 - Issue warnings when performance VODs returned are 720p instead of \
 1080p (see https://github.com/SNH48Live/KVM48/issues/7). This has \
 been the norm since early November, and there's nothing to be done \
