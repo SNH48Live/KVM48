@@ -36,7 +36,7 @@ KVM48 is supported on macOS, Linux, other Unix-like systems, and Windows 10.
 
 - Python 3.6 or later;
 - [`aria2`](https://aria2.github.io/), KVM48's downloader of choice;
-- [`caterpillar`](https://github.com/zmwangx/caterpillar), optional dependency for downloading M3U8/HLS VODs (`pip install caterpillar-hls`).
+- [`caterpillar`](https://github.com/zmwangx/caterpillar) for downloading M3U8/HLS VODs (automatically installed as a dependency through `pip install KVM48` since KVM48 v1.2).
 
 ## Installation
 

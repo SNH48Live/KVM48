@@ -36,6 +36,7 @@ setuptools.setup(
         "PyYAML",
         "arrow",
         "attrdict",
+        "caterpillar-hls",
         "distlib",
         "psutil",
         "requests",
