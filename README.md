@@ -500,6 +500,6 @@ Please follow the instructions carefully.
 
 ## License
 
-Copyright © 2018 Zhiming Wang <pypi@snh48live.org>
+Copyright © 2018–2019 Zhiming Wang <pypi@snh48live.org>
 
 The MIT License.
