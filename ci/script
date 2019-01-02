@@ -41,6 +41,20 @@ test_run() {
                 sleep 30
                 continue
             else
+                if [[ -e data/m3u8.txt ]]; then
+                    echo "${yellow}Testing reachability of remaining URLs in data/m3u8.txt...${reset}" >&2
+                    m3u8s_are_broken=1
+                    cut -f1 data/m3u8.txt | while read url; do
+                        if curl -fI -m 10 $url; then
+                            echo "${yellow}$url is fine${reset}" >&2
+                            m3u8s_are_broken=0
+                        fi
+                    done
+                    if (( m3u8s_are_broken )); then
+                        echo "${yellow}Remaining M3U8 URLs are broken, not KVM48's fault.${reset}" >&2
+                        return 0
+                    fi
+                fi
                 echo -E "${red}kvm48 $@ failed after 3 tries${reset}" >&2
                 exit 1
             fi
