@@ -200,6 +200,14 @@ def main():
             action="store_true",
             help="open text editor to edit the config file",
         )
+        newarg(
+            "-M",
+            "--multiple-instances",
+            action="store_true",
+            help="allow multiple instances of kvm48 to run at the same time "
+            "(by default only one instance is allowed to run); "
+            "use this option with causion",
+        )
         newarg("--version", action="version", version=__version__)
         newarg("--debug", action="store_true")
         args = parser.parse_args()
@@ -251,7 +259,8 @@ def main():
         if conf.update_checks:
             update.check_update_or_print_whats_new()
 
-        lock.lock_to_one_instance()
+        if not args.multiple_instances:
+            lock.lock_to_one_instance()
 
         if mode == "std":
             sys.stderr.write(
