@@ -50,8 +50,8 @@ pip install KVM48
 ```console
 $ kvm48 --help
 usage: kvm48 [-h] [-m {std,perf}] [-p] [-f FROM] [-t TO] [-s SPAN] [-n]
-             [--config CONFIG] [--filter FILTER] [--edit] [--version]
-             [--debug]
+             [--config CONFIG] [--filter FILTER] [--edit] [-M]
+             [--dump-config-template] [--version] [--debug]
 
 KVM48, the Koudai48 VOD Manager.
 
@@ -123,6 +123,13 @@ optional arguments:
   --filter FILTER       use this filter source file instead of the default
                         (see perf mode documentation)
   --edit                open text editor to edit the config file
+  -M, --multiple-instances
+                        allow multiple instances of kvm48 to run at the same
+                        time (by default only one instance is allowed to run);
+                        use this option with causion
+  --dump-config-template
+                        dump latest configuration file template to stdout and
+                        exit
   --version             show program's version number and exit
   --debug
 ```
@@ -199,6 +206,23 @@ naming:
 # New in v0.3.
 #named_subdirs: off
 
+# The convert_non_bmp_chars option determines how non-BMP characters
+# (not in the Basic Multilingual Plane, i.e., code points beyond U+FFFF)
+# are treated in filenames. Conversion is necessary is necessary for
+# certain legacy filesystems with only UCS-2 support, e.g., FAT32.
+#
+# The value of this option can be one of 'keep', 'strip', 'replace',
+# 'question_mark', or any single BMP character (U+0001 to U+FFFF).
+# 'keep' keeps the characters intact (default behavior); 'strip' strips
+# all non-BMP characters; 'replace' replaces all non-BMP characters with
+# U+FFFD (REPLACEMENT CHARACTER �); 'question_mark' replaces all non-BMP
+# characters with U+003F (QUESTION MARK ?); otherwise, a single BMP
+# character specifies the replacement character for non-BMP characters
+# directly.
+#
+# New in v1.3.
+#convert_non_bmp_chars: keep
+
 # Editor to use when a text editor is needed (e.g. in perf mode). Either
 # a command name or an absolute path. If not provided, OS-dependent
 # fallbacks will be used.
@@ -221,7 +245,7 @@ naming:
 # Note: If Notepad++ is installed via Chocolatey, the notepad++
 # executable in Chocolatey's bin is actually a non-blocking wrapper and
 # not suitable as KVM48's editor. Specify the actual path of
-# notepad++.exe instead, e.g., C:\\Program Files\\Notepad++\\notepad++.
+# notepad++.exe instead, e.g., C:\Program Files\Notepad++\notepad++.
 #
 # New in v1.0.
 #

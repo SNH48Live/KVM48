@@ -15,26 +15,27 @@ from .version import __version__
 
 LAST_CHECK_FILE = os.path.join(USER_CACHE_DIR, "last_check.txt")
 
-# v1.2
+# v1.3
 WHATS_NEW = """\
-This release does not contain new features or break compatibility in \
-any way.
+This release introduces new command line and config options, in addition \
+to improvements and bug fixes.
 
-- caterpillar (https://github.com/zmwangx/caterpillar) is now \
-automatically installed as a dependency through pip.
+- New command line option -M, --multiple-instance allows multiple \
+simultaneous instances of kvm48 (use with causion).
 
-- Improve onboarding experience.
+- New command line option --dump-config-template dumps the latest \
+configuration file template.
 
-- Issue warnings when performance VODs returned are 720p instead of \
-1080p (see https://github.com/SNH48Live/KVM48/issues/7). This has \
-been the norm since early November, and there's nothing to be done \
-on the client side, but it's probably a good idea to alert users to \
-the fact and inform them that the client has tried its best.
+- New configuration option convert_non_bmp_chars to enable replacement \
+or removal of non-BMP characters (code points above U+FFFF, e.g. most \
+emojis) in filenames for compatibility with legacy filesystems with \
+only UCS-2 support, e.g., FAT32.
 
-- Include more info about the execution environment when --debug is on.
+- List of successfully downloaded files is now printed at the end of \
+each session.
 
-- Link to issue reporting guidelines when the program halts due to \
-non-recoverable exceptions.
+- The `names` config option is no longer required when running in perf \
+mode.
 """
 
 
