@@ -272,6 +272,8 @@ def main():
             lock.lock_to_one_instance()
 
         if mode == "std":
+            if not conf.names:
+                raise ConfigError("names not specified")
             sys.stderr.write(
                 "Searching for VODs in the date range %s to %s for: %s\n"
                 % (from_.date(), to_.date(), ", ".join(conf.names))

@@ -252,10 +252,13 @@ class Config(object):
             )
 
         self.names = obj["names"]
-        if not isinstance(self.names, list) or not all(
-            isinstance(v, str) for v in self.names
-        ):
-            raise ConfigError("invalid names; names must be a nonempty list of strings")
+        if self.names is None:
+            self.names = []
+        else:
+            if not isinstance(self.names, list) or not all(
+                isinstance(v, str) for v in self.names
+            ):
+                raise ConfigError("invalid names; names must be a list of strings")
 
         try:
             self._span = max(int(obj.get("span") or 1), 1)
