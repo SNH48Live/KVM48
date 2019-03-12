@@ -87,6 +87,23 @@ naming:
 # New in v0.3.
 #named_subdirs: off
 
+# The convert_non_bmp_chars option determines how non-BMP characters
+# (not in the Basic Multilingual Plane, i.e., code points beyond U+FFFF)
+# are treated in filenames. Conversion is necessary is necessary for
+# certain legacy filesystems with only UCS-2 support, e.g., FAT32.
+#
+# The value of this option can be one of 'keep', 'strip', 'replace',
+# 'question_mark', or any single BMP character (U+0001 to U+FFFF).
+# 'keep' keeps the characters intact (default behavior); 'strip' strips
+# all non-BMP characters; 'replace' replaces all non-BMP characters with
+# U+FFFD (REPLACEMENT CHARACTER �); 'question_mark' replaces all non-BMP
+# characters with U+003F (QUESTION MARK ?); otherwise, a single BMP
+# character specifies the replacement character for non-BMP characters
+# directly.
+#
+# New in v1.3.
+#convert_non_bmp_chars: keep
+
 # Editor to use when a text editor is needed (e.g. in perf mode). Either
 # a command name or an absolute path. If not provided, OS-dependent
 # fallbacks will be used.
@@ -202,6 +219,7 @@ class Config(object):
         self._directory = None  # type: str
         self.naming = DEFAULT_NAMING_PATTERN  # type: str
         self._named_subdirs = False  # type: bool
+        self.convert_non_bmp_chars = "keep"  # type: str
         self.editor = None  # type: str
         self.editor_opts = None  # type: List[str]
         self.update_checks = True  # type: bool
@@ -252,6 +270,12 @@ class Config(object):
             self._directory = directory
         else:
             self._directory = os.getcwd()
+
+        self.convert_non_bmp_chars = obj.get("convert_non_bmp_chars") or "keep"
+        try:
+            self._sanitize_filename("\U0001F600")
+        except ValueError as err:
+            raise ConfigError(str(err))
 
         self.naming = obj.get("naming") or DEFAULT_NAMING_PATTERN
         self.test_naming_pattern()
@@ -423,13 +447,15 @@ class Config(object):
             "title": vod.title.strip(),
             "ext": extension_from_url(vod.vod_url),
         }
-        return sanitize_filename(unsanitized)
+        return self._sanitize_filename(unsanitized)
 
     def filepath(self, vod: VOD) -> str:
         if hasattr(vod, "filepath") and vod.filepath:
             return vod.filepath
         if self.named_subdirs and hasattr(vod, "name"):
-            return sanitize_filename(vod.name or "其它") + os.sep + self.filename(vod)
+            return (
+                self._sanitize_filename(vod.name or "其它") + os.sep + self.filename(vod)
+            )
         else:
             return self.filename(vod)
 
@@ -464,6 +490,11 @@ class Config(object):
             )
         except Exception:
             raise ConfigError("bad naming pattern: %s" % self.naming)
+
+    def _sanitize_filename(self, filename: str) -> str:
+        return sanitize_filename(
+            filename, convert_non_bmp_chars=self.convert_non_bmp_chars
+        )
 
     @staticmethod
     def _get_group_name(group_id: int) -> str:
