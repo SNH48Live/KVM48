@@ -6,6 +6,7 @@ import time
 from typing import Optional, Tuple
 
 import requests
+from distlib.version import NormalizedVersion, UnsupportedVersionError
 
 from .dirs import USER_CACHE_DIR
 from .utils import read_keypress_with_timeout
@@ -65,11 +66,23 @@ def pip_upgrade_command(prerelease: bool = False) -> str:
 def check_update_or_print_whats_new(force: bool = False) -> None:
     last_check_date, last_check_version = load_last_check_info()
     write_last_check_info()
-    if last_check_date and (last_check_version != __version__):
-        # Only print what's new when the program has checked for updates
-        # in the past, and the version that last checked for updates
-        # isn't the same as the current running version. Filters out
-        # new installations.
+
+    # Only print what's new when the program has checked for updates in
+    # the past, and the version that last checked for updates is older
+    # than the current running version, and the current running version
+    # is not a dev version. Filters out new installations.
+    print_whats_new = True
+    if not last_check_date:
+        print_whats_new = False
+    if "dev" in __version__:
+        print_whats_new = False
+    try:
+        if NormalizedVersion(last_check_version) >= NormalizedVersion(__version__):
+            print_whats_new = False
+    except UnsupportedVersionError:
+        pass
+
+    if print_whats_new:
         sys.stderr.write("WHAT'S NEW IN KVM48 v%s:\n\n" % __version__)
         sys.stderr.write(WHATS_NEW)
         sys.stderr.write(
