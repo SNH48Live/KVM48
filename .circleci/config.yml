@@ -1,0 +1,27 @@
+version: 2
+
+shared: &shared
+  machine: true
+  working_directory: ~/KVM48
+  steps:
+    - checkout
+    - run: ci/install
+    - run: ci/script
+
+jobs:
+  py36:
+    environment:
+      PYTHON_VERSION: 3.6
+    <<: *shared
+
+  py37:
+    environment:
+      PYTHON_VERSION: 3.7
+    <<: *shared
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - py36
+      - py37
