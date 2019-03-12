@@ -35,4 +35,6 @@ def get_existing_perf_ids() -> List[str]:
 @ensure_perf_id_database
 def insert_perf_ids(ids: Iterable[str]) -> None:
     with perf_id_conn:
-        perf_id_conn.executemany("INSERT OR IGNORE INTO id(id) VALUES (?)", [(id,) for id in ids])
+        perf_id_conn.executemany(
+            "INSERT OR IGNORE INTO id(id) VALUES (?)", [(id,) for id in ids]
+        )

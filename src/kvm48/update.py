@@ -72,7 +72,9 @@ def check_update_or_print_whats_new(force: bool = False) -> None:
         # new installations.
         sys.stderr.write("WHAT'S NEW IN KVM48 v%s:\n\n" % __version__)
         sys.stderr.write(WHATS_NEW)
-        sys.stderr.write("\nPress any key to continue (the program will auto-resume in 15 seconds)...\n\n")
+        sys.stderr.write(
+            "\nPress any key to continue (the program will auto-resume in 15 seconds)...\n\n"
+        )
         read_keypress_with_timeout(15)
 
     if not force and datetime.date.today() == last_check_date:
