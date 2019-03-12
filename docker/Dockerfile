@@ -14,7 +14,7 @@ RUN apt-get -yqq update && \
 # Download and install a static build of the latest stable release of FFmpeg.
 # Because asking Debian to provide a release branch that's less than two years
 # old is a stretch (pun intended).
-RUN wget --progress=dot:mega -O ffmpeg-static.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz && \
+RUN wget --progress=dot:mega -O ffmpeg-static.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
     tar -xf ffmpeg-static.tar.xz --strip-components=1 --wildcards --no-anchored -C /usr/bin ffmpeg && \
     rm ffmpeg-static.tar.xz
 
