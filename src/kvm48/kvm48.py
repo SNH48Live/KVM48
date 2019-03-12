@@ -208,9 +208,18 @@ def main():
             "(by default only one instance is allowed to run); "
             "use this option with causion",
         )
+        newarg(
+            "--dump-config-template",
+            action="store_true",
+            help="dump latest configuration file template to stdout and exit",
+        )
         newarg("--version", action="version", version=__version__)
         newarg("--debug", action="store_true")
         args = parser.parse_args()
+
+        if args.dump_config_template:
+            sys.stdout.write(config.CONFIG_TEMPLATE)
+            sys.exit(0)
 
         mode = args.mode
         debug = args.debug
