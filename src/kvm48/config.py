@@ -251,7 +251,7 @@ class Config(object):
                 "unrecognized group_id; must be one of 0, 10, 11, 12, 13, and 14"
             )
 
-        self.names = obj["names"]
+        self.names = obj.get("names")
         if self.names is None:
             self.names = []
         else:
