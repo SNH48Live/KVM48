@@ -484,6 +484,7 @@ def main():
             sys.exit(0)
 
         exit_status = 0
+        downloaded_files = []
 
         # Write the caterpillar manifest first so that we don't need to
         # wait until aria2 is finished.
@@ -495,6 +496,9 @@ def main():
 
         if a2_unfinished_targets:
             a2_manifest = os.path.join(conf.directory, "aria2.txt")
+            a2_dest_files = [
+                os.path.join(conf.directory, path) for _, path in a2_unfinished_targets
+            ]
             for attempt in range(3):
                 if attempt == 0:
                     sys.stderr.write("\nProcessing direct downloads with aria2...\n\n")
@@ -524,6 +528,10 @@ def main():
                 exit_status = 1
                 time.sleep(5)
 
+            for filepath in a2_dest_files:
+                if os.path.exists(filepath) and not os.path.exists(filepath + ".aria2"):
+                    downloaded_files.append(filepath)
+
         if m3u8_unfinished_targets:
             requirement_met = caterpillar.check_caterpillar_requirement()
             if not requirement_met:
@@ -534,6 +542,10 @@ def main():
                 )
                 exit_status = 1
             else:
+                m3u8_dest_files = [
+                    os.path.join(conf.directory, path)
+                    for _, path in m3u8_unfinished_targets
+                ]
                 for attempt in range(3):
                     if attempt == 0:
                         sys.stderr.write(
@@ -570,8 +582,17 @@ def main():
                     )
                     exit_status = 1
 
+                for filepath in m3u8_dest_files:
+                    if os.path.exists(filepath):
+                        downloaded_files.append(filepath)
+
         if mode == "perf":
             persistence.insert_perf_ids([vod.id for vod in vod_list])
+
+        if downloaded_files:
+            sys.stderr.write("Downloaded %d files:\n" % len(downloaded_files))
+            for filepath in downloaded_files:
+                print(os.path.normpath(filepath), file=sys.stderr)
 
         if exit_status == 0:
             sys.stderr.write("All is well.\n")
