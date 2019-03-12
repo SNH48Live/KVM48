@@ -206,7 +206,7 @@ def main():
             action="store_true",
             help="allow multiple instances of kvm48 to run at the same time "
             "(by default only one instance is allowed to run); "
-            "use this option with causion",
+            "use this option with caution",
         )
         newarg(
             "--dump-config-template",
