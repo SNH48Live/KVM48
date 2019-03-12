@@ -14,7 +14,7 @@ from .utils import extension_from_url, sanitize_filename
 
 if os.path.exists(os.path.expanduser("~/.config/kvm48/config.yml")):
     # Legacy config path is respected.
-    DEFAULT_CONFIG_DIR = os.path.normcase(os.path.expanduser("~/.config/kvm48/"))
+    DEFAULT_CONFIG_DIR = os.path.normpath(os.path.expanduser("~/.config/kvm48/"))
 else:
     DEFAULT_CONFIG_DIR = USER_CONFIG_DIR
 DEFAULT_CONFIG_FILE = os.path.join(DEFAULT_CONFIG_DIR, "config.yml")
