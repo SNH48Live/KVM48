@@ -15,27 +15,9 @@ from .version import __version__
 
 LAST_CHECK_FILE = os.path.join(USER_CACHE_DIR, "last_check.txt")
 
-# v1.3
+# v1.3.1
 WHATS_NEW = """\
-This release introduces new command line and config options, in addition \
-to improvements and bug fixes.
-
-- New command line option -M, --multiple-instance allows multiple \
-simultaneous instances of kvm48 (use with causion).
-
-- New command line option --dump-config-template dumps the latest \
-configuration file template.
-
-- New configuration option convert_non_bmp_chars to enable replacement \
-or removal of non-BMP characters (code points above U+FFFF, e.g. most \
-emojis) in filenames for compatibility with legacy filesystems with \
-only UCS-2 support, e.g., FAT32.
-
-- List of successfully downloaded files is now printed at the end of \
-each session.
-
-- The `names` config option is no longer required when running in perf \
-mode.
+This release acknowledges the fact that KVM48 is now completely broken.
 """
 
 
