@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import tempfile
+import textwrap
 import time
 
 import arrow
@@ -267,6 +268,19 @@ def main():
 
         if conf.update_checks:
             update.check_update_or_print_whats_new()
+
+        sys.exit(
+            textwrap.dedent(
+                """
+                KVM48 is currently broken since the API it relied on was killed when Koudai48 v6
+                came out on April 15, 2019. Fix is impossible at the moment, since the author is
+                not currently equipped to crack SSL certificate pinning on iOS. You can follow the
+                progress of this issue at:
+
+                    https://github.com/SNH48Live/KVM48/issues/11
+                """
+            )
+        )
 
         if not args.multiple_instances:
             lock.lock_to_one_instance()
