@@ -238,7 +238,7 @@ class Config(object):
             config_file = DEFAULT_CONFIG_FILE
         try:
             with open(config_file, encoding="utf-8") as fp:
-                obj = yaml.load(fp.read())
+                obj = yaml.safe_load(fp.read())
         except Exception as exc:
             raise ConfigError("failed to load/parse %s: %s" % (config_file, str(exc)))
 
