@@ -107,6 +107,15 @@ PERF_MODE_INSTRUCTIONS = """\
 
 """
 
+PERF_MODE_WARNINGS = """\
+########################################################################
+# DUE TO API CHANGES IN KOUDAI48 V6, KVM48 CAN NO LONGER TELL MOST     #
+# SPECIAL STAGES (E.G., BIRTHDAY STAGES) FROM REGULAR ONES. PLEASE     #
+# CROSS REFERENCE https://live.48.cn/ TO ENSURE ACCURATE TITLES.       #
+########################################################################
+
+"""
+
 
 def parse_date(s: str) -> arrow.Arrow:
     def date(year: int, month: int, day: int) -> arrow.Arrow:
@@ -269,19 +278,6 @@ def main():
         if conf.update_checks:
             update.check_update_or_print_whats_new()
 
-        sys.exit(
-            textwrap.dedent(
-                """
-                KVM48 is currently broken since the API it relied on was killed when Koudai48 v6
-                came out on April 15, 2019. Fix is impossible at the moment, since the author is
-                not currently equipped to crack SSL certificate pinning on iOS. You can follow the
-                progress of this issue at:
-
-                    https://github.com/SNH48Live/KVM48/issues/11
-                """
-            )
-        )
-
         if not args.multiple_instances:
             lock.lock_to_one_instance()
 
@@ -294,17 +290,17 @@ def main():
             )
             vod_list = list(
                 reversed(
-                    list(
-                        koudai.list_vods(
-                            from_,
-                            to_.shift(days=1),
-                            group_id=conf.group_id,
-                            show_progress=True,
-                            show_progress_threshold=5,
+                    [
+                        vod
+                        for vod in koudai.list_member_vods(
+                            from_, to_.shift(days=1), group_id=conf.group_id
                         )
-                    )
+                        if vod.name in conf.names
+                    ]
                 )
             )
+            sys.stderr.write("Resolving %d VOD URLs...\n" % len(vod_list))
+            koudai.resolve_member_vods(vod_list)
         elif mode == "perf":
             conf.load_filter("perf", args.filter)
             sys.stderr.write(
@@ -315,11 +311,7 @@ def main():
                 reversed(
                     list(
                         koudai.list_perf_vods(
-                            from_,
-                            to_.shift(days=1),
-                            group_id=conf.group_id,
-                            show_progress=True,
-                            show_progress_threshold=5,
+                            from_, to_.shift(days=1), group_id=conf.group_id
                         )
                     )
                 )
@@ -332,22 +324,23 @@ def main():
             with os.fdopen(tmpfd, "w", encoding="utf-8") as fp:
                 if conf.perf_instructions:
                     fp.write(PERF_MODE_INSTRUCTIONS)
+                fp.write(PERF_MODE_WARNINGS)
                 for vod in vod_list:
-                    vod.filename = "%s %s %s.mp4" % (
+                    vod.filename = "%s %s%s.mp4" % (
                         vod.start_time.strftime("%Y%m%d"),
+                        "".join(team + " " for team in vod.teams),
                         vod.title.strip(),
-                        vod.subtitle.strip(),
                     )
                     vod.filepath = conf.filepath(vod)
                     filtered_filepath = conf.filter(vod.filepath)
                     if filtered_filepath is None:
-                        print("#x", vod.id, vod.filepath, file=fp)
+                        print("#x", vod.id, "  ", vod.filepath, file=fp)
                     else:
                         vod.filepath = filtered_filepath
                         if vod.id in existing_ids:
-                            print("#-", vod.id, vod.filepath, file=fp)
+                            print("#-", vod.id, "  ", vod.filepath, file=fp)
                         else:
-                            print(vod.id, vod.filepath, file=fp)
+                            print(vod.id, "  ", vod.filepath, file=fp)
             sys.stderr.write(
                 "Launching text editor for '%s'\n" % tmpfile
                 + "Program will resume once you save the file and exit the text editor...\n"
@@ -386,10 +379,8 @@ def main():
                     vod.filepath = filepath
                     vod_list.append(vod)
                     seen.add(id)
-            sys.stderr.write("Resolving VOD URLs...\n")
-            koudai.resolve_perf_vods(
-                vod_list, show_progress=True, show_progress_threshold=5
-            )
+            sys.stderr.write("Resolving %d VOD URLs...\n" % len(vod_list))
+            koudai.resolve_perf_vods(vod_list)
         else:
             raise ValueError("unrecognized mode %s" % repr(mode))
 
@@ -401,38 +392,35 @@ def main():
         m3u8_unfinished_targets = []
         existing_filepaths = set()
         for vod in vod_list:
-            if (mode == "std" and vod.name in conf.names) or mode == "perf":
-                url = vod.vod_url
-                src_ext = utils.extension_from_url(vod.vod_url, dot=True)
-                base, _ = os.path.splitext(conf.filepath(vod))
+            url = vod.vod_url
+            src_ext = utils.extension_from_url(vod.vod_url, dot=True)
+            base, _ = os.path.splitext(conf.filepath(vod))
 
-                # If source extension is .m3u8, use .mp4 as output
-                # extension; otherwise, use the source extension as the
-                # output extension.
-                ext = ".mp4" if src_ext == ".m3u8" else src_ext
+            # If source extension is .m3u8, use .mp4 as output
+            # extension; otherwise, use the source extension as the
+            # output extension.
+            ext = ".mp4" if src_ext == ".m3u8" else src_ext
 
-                # Filename deduplication
-                filepath = base + ext
-                number = 0
-                while filepath in existing_filepaths:
-                    number += 1
-                    filepath = "%s (%d)%s" % (base, number, ext)
-                existing_filepaths.add(filepath)
+            # Filename deduplication
+            filepath = base + ext
+            number = 0
+            while filepath in existing_filepaths:
+                number += 1
+                filepath = "%s (%d)%s" % (base, number, ext)
+            existing_filepaths.add(filepath)
 
-                fullpath = os.path.join(conf.directory, filepath)
+            fullpath = os.path.join(conf.directory, filepath)
 
-                entry = (url, filepath)
-                targets.append(entry)
-                if src_ext == ".m3u8":
-                    m3u8_targets.append(entry)
-                    if not os.path.exists(fullpath):
-                        m3u8_unfinished_targets.append(entry)
-                else:
-                    a2_targets.append(entry)
-                    if not os.path.exists(fullpath) or os.path.exists(
-                        fullpath + ".aria2"
-                    ):
-                        a2_unfinished_targets.append(entry)
+            entry = (url, filepath)
+            targets.append(entry)
+            if src_ext == ".m3u8":
+                m3u8_targets.append(entry)
+                if not os.path.exists(fullpath):
+                    m3u8_unfinished_targets.append(entry)
+            else:
+                a2_targets.append(entry)
+                if not os.path.exists(fullpath) or os.path.exists(fullpath + ".aria2"):
+                    a2_unfinished_targets.append(entry)
 
         new_urls = set(
             url for url, _ in a2_unfinished_targets + m3u8_unfinished_targets
@@ -442,25 +430,6 @@ def main():
                 print("%s\t%s\t*" % (url, filepath))
             else:
                 print("%s\t%s" % (url, filepath))
-
-        if mode == "perf":
-            # Alert to non-1080p VODs.
-            non_1080p_vod_found = False
-            for url in new_urls:
-                if "/chaoqing/" in url:
-                    continue
-                elif "/gaoqing/" in url:
-                    quality = "720p"
-                elif "/liuchang/" in url:
-                    quality = "480p"
-                else:
-                    continue
-                non_1080p_vod_found = True
-                sys.stderr.write("[WARNING] %s is %s, not 1080p\n" % (url, quality))
-            if non_1080p_vod_found:
-                sys.stderr.write(
-                    "See <https://github.com/SNH48Live/KVM48/issues/7> for details about this issue.\n"
-                )
 
         # Make subdirectories.
         if not args.dry:

@@ -481,7 +481,6 @@ class Config(object):
                     {
                         "id": "5a80219c0cf29aa343fbe009",
                         "member_id": 35,
-                        "room_id": 3872010,
                         "type": "直播",
                         "name": "莫寒",
                         "title": "一人吃火锅的人生成就(๑˙ー˙๑)",
