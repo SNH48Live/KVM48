@@ -1,7 +1,5 @@
 <h1 align="center"><img src="https://raw.githubusercontent.com/SNH48Live/KVM48/master/assets/logo.png" width="150" height="150" alt="KVM48"></h1>
 
-<p align="center"><b>Project closed since the company is <a href="https://github.com/SNH48Live/KVM48/issues/11">determined to fuck us all</a>.</b></p>
-
 <p align="center">
   <a href="https://pypi.python.org/pypi/KVM48"><img src="https://img.shields.io/pypi/v/KVM48.svg?maxAge=3600" alt="pypi"></a>
   <img src="https://img.shields.io/badge/python-3.6,%203.7-blue.svg?maxAge=86400" alt="python: 3.6, 3.7">
