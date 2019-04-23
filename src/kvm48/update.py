@@ -15,9 +15,18 @@ from .version import __version__
 
 LAST_CHECK_FILE = os.path.join(USER_CACHE_DIR, "last_check.txt")
 
-# v1.3.1
+# v1.3.600
 WHATS_NEW = """\
-This release acknowledges the fact that KVM48 is now completely broken.
+This release uses the new Koudai48 v6 API.
+
+- Due to limitations of the new API, std mode now requires
+  siginificantly more API queries (one additional request for each
+  VOD to download). This cannot be avoided.
+
+- Again due to limitations of the new API, suggested filenames in perf
+  mode lack critical information and may duplicate team information
+  (a rough edge not yet sorted out). Improvment is planned. See
+  https://github.com/SNH48Live/KVM48/issues/13.
 """
 
 
