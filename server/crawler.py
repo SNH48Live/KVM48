@@ -231,6 +231,13 @@ def main():
         help="crawl all pages instead of stopping at last seen",
     )
     parser.add_argument(
+        "-L",
+        "--limit-pages",
+        type=int,
+        metavar="N",
+        help="only crawl at most the first N pages of each club",
+    )
+    parser.add_argument(
         "--legacy",
         action="store_true",
         help="also crawl VODs of now defunct SHY48 and CKG48",
@@ -239,7 +246,7 @@ def main():
 
     club_ids = (1, 2, 3, 4, 5) if args.legacy else (1, 2, 3)
     for club_id in club_ids:
-        crawl_club(club_id, full=args.full)
+        crawl_club(club_id, limit_pages=args.limit_pages, full=args.full)
 
 
 if __name__ == "__main__":
