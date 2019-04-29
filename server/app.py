@@ -16,7 +16,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app)
 # Example RATELIMIT_STORAGE_URL: redis://localhost:6379/0
 RATELIMIT_ON = bool(os.getenv("RATELIMIT_STORAGE_URL"))
 if RATELIMIT_ON:
-    RATELIMIT = os.getenv("RATELIMIT", default="1/s")
+    RATELIMIT = os.getenv("RATELIMIT", default="1/second")
     app.config.update({"RATELIMIT_STORAGE_URL": os.getenv("RATELIMIT_STORAGE_URL")})
     limiter = flask_limiter.Limiter(app, key_func=flask_limiter.util.get_remote_address)
 

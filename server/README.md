@@ -41,7 +41,7 @@ I run the crawler in a cron job every 5 minutes. While the crawler itself lacks 
 Entry point to the API server is `app.py`. The WSGI object is `app.app`, and `./app.py` launches a development server. The following environment variables are supported:
 
 - `RATELIMIT_STORAGE_URL`: If set, rate limit the API endpoint. Example: `redis://localhost:6379/15`. See [Flask-Limiter](https://flask-limiter.readthedocs.io/en/stable/#configuration) documentation for details.
-- `RATELIMIT`: If rate limiting is enabled (through `RATELIMIT_STORAGE_URL`), the limit can be customized via this variable. The default is `1/s`. Again, see [Flask-Limiter](https://flask-limiter.readthedocs.io/en/stable/#ratelimit-string) documentation for details.
+- `RATELIMIT`: If rate limiting is enabled (through `RATELIMIT_STORAGE_URL`), the limit can be customized via this variable. The default is `1/second`. Again, see [Flask-Limiter](https://flask-limiter.readthedocs.io/en/stable/#ratelimit-string) documentation for details.
 
 ## Infrequently asked questions
 
