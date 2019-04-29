@@ -58,8 +58,7 @@ def retrieve_seen_urls():
     )
 
 
-init_database(logger=logger)
-seen_urls = retrieve_seen_urls()
+seen_urls = None
 seen_urls_lock = threading.Lock()
 
 
@@ -243,6 +242,10 @@ def main():
         help="also crawl VODs of now defunct SHY48 and CKG48",
     )
     args = parser.parse_args()
+
+    init_database(logger=logger)
+    global seen_urls
+    seen_urls = retrieve_seen_urls()
 
     club_ids = (1, 2, 3, 4, 5) if args.legacy else (1, 2, 3)
     for club_id in club_ids:
