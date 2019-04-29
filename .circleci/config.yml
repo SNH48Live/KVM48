@@ -8,6 +8,15 @@ shared: &shared
     - run: ci/install
     - run: ci/script
 
+server-shared: &server-shared
+  worker_directory: ~/KVM48/server
+  steps:
+    - run: apt update && apt install -y --no-install-recommends git
+    - checkout
+    - run: pip install -r server/requirements.txt pytest
+    - run: cd server && python -m pytest
+    - run: server/crawler.py --limit-pages 3
+
 jobs:
   py36:
     environment:
@@ -19,6 +28,16 @@ jobs:
       PYTHON_VERSION: 3.7
     <<: *shared
 
+  server-py36:
+    docker:
+      - image: python:3.6-slim
+    <<: *server-shared
+
+  server-py37:
+    docker:
+      - image: python:3.7-slim
+    <<: *server-shared
+
 workflows:
   version: 2
 
@@ -26,6 +45,8 @@ workflows:
     jobs:
       - py36
       - py37
+      - server-py36
+      - server-py37
 
   nightly:
     triggers:
@@ -38,3 +59,5 @@ workflows:
     jobs:
       - py36
       - py37
+      - server-py36
+      - server-py37
