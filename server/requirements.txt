@@ -1,0 +1,10 @@
+Flask>=1.0
+Flask-GraphQL
+Flask-Limiter
+Werkzeug>=0.15
+beautifulsoup4
+graphene
+peewee
+peewee_migrate
+redis
+requests
